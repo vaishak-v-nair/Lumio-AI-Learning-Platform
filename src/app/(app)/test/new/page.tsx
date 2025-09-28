@@ -45,7 +45,7 @@ export default function NewTestPage() {
     }, [router, toast]);
     
     return (
-        <div className="flex flex-col items-center justify-center w-full h-[calc(100vh-8.5rem)]">
+        <div className="flex flex-col items-center justify-center w-full h-[calc(100vh-12rem)]">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Building Your Test</h2>
             <p className="text-muted-foreground">{status}</p>
