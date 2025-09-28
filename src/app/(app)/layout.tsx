@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { LumioLogo } from "@/components/LumioLogo";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const user = {
+    name: "Sanga",
+    avatar: "https://picsum.photos/seed/user-avatar/32/32"
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen">
@@ -78,13 +83,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     className="overflow-hidden rounded-full"
                   >
                     <Avatar>
-                      <AvatarImage src="https://picsum.photos/seed/user-avatar/32/32" alt="User avatar" />
-                      <AvatarFallback>U</AvatarFallback>
+                      <AvatarImage src={user.avatar} alt="User avatar" />
+                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>Profile</DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
