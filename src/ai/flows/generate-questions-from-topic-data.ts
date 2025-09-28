@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -84,17 +85,19 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
     outputSchema: GenerateQuestionsFromTopicDataOutputSchema,
   },
   async (input) => {
+    console.log(`Attempting to fetch data for topic: ${input.topic}`);
     const topicData = await getTopicData(input.topic);
 
     if (!topicData) {
         // Fallback to the generic generator if no specific data is found for the topic
-        console.log(`No topic data found for '${input.topic}'. Falling back to generic test generation.`);
+        console.log(`No topic data found for '${input.topic}' in Firestore. Falling back to generic test generation.`);
         return generatePersonalizedTest({
             weakAreas: 'Grasping, Retention, Application',
             numberOfQuestions: input.numberOfQuestions,
         });
     }
 
+    console.log(`Successfully fetched data for '${input.topic}'. Generating questions using data-driven prompt.`);
     try {
         const llmResponse = await dataDrivenPrompt({ ...input, topicData });
         const output = llmResponse.output;
@@ -104,10 +107,12 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
           throw new Error("Failed to get a valid response from the model for data-driven questions.");
         }
         
+        console.log("Successfully generated questions from topic data.");
         return output;
     } catch (error) {
         console.error(`Error in generateQuestionsFromTopicDataFlow for topic '${input.topic}':`, error);
         // If the data-driven flow fails, fallback to the original personalized test generator
+        console.log("Falling back to generic test generation due to an error.");
         return generatePersonalizedTest({
             weakAreas: 'Grasping, Retention, Application',
             numberOfQuestions: input.numberOfQuestions,
