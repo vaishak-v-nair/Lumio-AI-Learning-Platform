@@ -73,28 +73,33 @@ const generatePersonalizedTestFlow = ai.defineFlow(
     outputSchema: GeneratePersonalizedTestOutputSchema,
   },
   async input => {
-    const llmResponse = await prompt(input);
-    const output = llmResponse.output;
+    try {
+      const llmResponse = await prompt(input);
+      const output = llmResponse.output;
 
-    if (!output) {
-      console.error("LLM failed to produce a valid output.", llmResponse);
-      const text = llmResponse.text;
-      const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-      const match = text.match(jsonRegex);
-      if (match && match[1]) {
-        try {
-          const extractedJson = JSON.parse(match[1]);
-          const validation = GeneratePersonalizedTestOutputSchema.safeParse(extractedJson);
-          if (validation.success) {
-            return validation.data;
+      if (!output) {
+        console.error("LLM failed to produce a valid output.", llmResponse);
+        const text = llmResponse.text;
+        const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+        const match = text.match(jsonRegex);
+        if (match && match[1]) {
+          try {
+            const extractedJson = JSON.parse(match[1]);
+            const validation = GeneratePersonalizedTestOutputSchema.safeParse(extractedJson);
+            if (validation.success) {
+              return validation.data;
+            }
+          } catch (jsonError) {
+            console.error("Failed to parse extracted JSON:", jsonError);
           }
-        } catch (jsonError) {
-          console.error("Failed to parse extracted JSON:", jsonError);
         }
+        throw new Error("Failed to get a valid response from the model. Please try again later.");
       }
-      throw new Error("Failed to get a valid response from the model. Please try again later.");
+      
+      return output;
+    } catch (error) {
+      console.error("Error in generatePersonalizedTestFlow:", error);
+      throw new Error("Failed to generate a personalized test due to a service error. Please try again later.");
     }
-    
-    return output;
   }
 );
