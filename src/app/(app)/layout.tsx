@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { LayoutDashboard, BookCopy, LogOut } from "lucide-react";
+import { LayoutDashboard, BookCopy, LogOut, GraduationCap, User, BarChart } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -33,6 +33,30 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <Link href="#">
                     <BookCopy />
                     <span>My Tests</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Teacher Dashboard">
+                  <Link href="/teacher/dashboard">
+                    <GraduationCap />
+                    <span>Teacher</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Parent Dashboard">
+                  <Link href="/parent/dashboard">
+                    <User />
+                    <span>Parent</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="Story Demo">
+                  <Link href="/story/sanga">
+                    <BarChart />
+                    <span>Story</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
