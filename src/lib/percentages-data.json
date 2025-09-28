@@ -1,0 +1,60 @@
+
+{
+  "topic": "Percentages",
+  "concepts": [
+    {
+      "name": "Ratio to Percent",
+      "explanation": "To express a ratio a : b as a percent, convert the ratio to a fraction (a/b) and then multiply by 100."
+    },
+    {
+      "name": "Decimal to Percent",
+      "explanation": "To express a decimal as a percentage, multiply the decimal by 100."
+    },
+    {
+      "name": "Percent to Decimal",
+      "explanation": "To convert a percentage to a decimal, divide by 100. For example, 1% is 0.01."
+    },
+    {
+      "name": "Calculating Percent of a Number",
+      "explanation": "To find 'x percent' of a number 'y', calculate (x/100) * y."
+    },
+    {
+      "name": "Finding What Percent One Number is of Another",
+      "explanation": "To find what percent a number 'a' is of another number 'b', calculate (a/b) * 100."
+    },
+    {
+      "name": "Percentage Change",
+      "explanation": "Percentage change is calculated as ((New Value - Original Value) / Original Value) * 100."
+    },
+    {
+      "name": "Percentage in Mixtures",
+      "explanation": "The concentration of a substance in a mixture is (Amount of Substance / Total Amount of Mixture) * 100."
+    }
+  ],
+  "examples": [
+    {
+      "problem": "The ratio 5 : 4 expressed as a percent equals:",
+      "solution": "The ratio 5:4 is the fraction 5/4. (5/4) * 100 = 125%. The correct option is 125%."
+    },
+    {
+      "problem": "Half of 1 percent written as a decimal is:",
+      "solution": "Half of 1 percent is 0.5%. To write this as a decimal, divide by 100. 0.5 / 100 = 0.005. The correct option is 0.005."
+    },
+    {
+      "problem": "What is 15 percent of Rs. 34?",
+      "solution": "15% of 34 is (15/100) * 34 = 0.15 * 34 = 5.10. The correct option is Rs. 5.10."
+    },
+    {
+      "problem": "How many litres of pure acid are there in 8 litres of a 20% solution?",
+      "solution": "The amount of pure acid is 20% of 8 litres. (20/100) * 8 = 0.20 * 8 = 1.6 litres. The correct option is 1.6."
+    },
+    {
+      "problem": "A student multiplied a number by 4/5 instead of 5/4. What is the percentage error in the calculation?",
+      "solution": "Let the number be x. The correct result is (5/4)x = 1.25x. The incorrect result is (4/5)x = 0.8x. The error is 1.25x - 0.8x = 0.45x. The percentage error is (Error / Correct Value) * 100 = (0.45x / 1.25x) * 100 = 36%. The correct option is 36."
+    },
+    {
+      "problem": "Due to an increment of 20% in the price of eggs, 5 less eggs are available for Rs. 200. What is the new rate of a dozen eggs?",
+      "solution": "Let the original price per egg be P. The number of eggs for Rs. 200 is 200/P. The new price is 1.2P. The new number of eggs is 200/(1.2P). The difference is 5. So, (200/P) - (200/1.2P) = 5. Solving for P gives P = 6.66. The new price is 1.2 * 6.66 = Rs. 8 per egg. The rate for a dozen is 8 * 12 = Rs. 96. The correct option is Rs. 96."
+    }
+  ]
+}
