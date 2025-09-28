@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getLatestTestResult } from '@/lib/firestore';
 
 export function useUserProgress() {
   const [progressData, setProgressData] = useState<any[]>([]);
@@ -9,11 +10,11 @@ export function useUserProgress() {
   useEffect(() => {
     const fetchData = async () => {
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const userName = localStorage.getItem('userName') || 'guest';
         
-        const storedResults = localStorage.getItem('testResults');
-        if (storedResults) {
-            const results = JSON.parse(storedResults);
+        const results = await getLatestTestResult(userName, 'time-and-distance');
+        
+        if (results) {
             const categoryData: { [key: string]: { corrects: number[], count: number } } = {};
 
             results.questions.forEach((q: any, index: number) => {
@@ -38,7 +39,6 @@ export function useUserProgress() {
                 [category.toLowerCase()]: (categoryData[category].corrects.length / categoryData[category].count) * 100,
             }));
 
-            // Merge with existing trend data if any
             const mergedTrends = newLearningTrends.reduce((acc, trend) => {
                 const existing = acc.find(item => item.month === trend.month);
                 if (existing) {
@@ -50,7 +50,6 @@ export function useUserProgress() {
             }, [] as any[]);
             setLearningTrends(mergedTrends);
             
-            // This is a mock trending value
             setTrending(12);
 
         } else {

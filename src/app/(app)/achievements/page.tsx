@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Medal, Star, Zap, Trophy, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { getLatestTestResult } from "@/lib/firestore";
+import type { TestResult } from "@/lib/firestore";
 
 type Achievement = {
     id: string;
@@ -26,29 +28,34 @@ export default function AchievementsPage() {
     const [earnedAchievements, setEarnedAchievements] = useState<Set<string>>(new Set());
 
     useEffect(() => {
-        setIsLoading(true);
-        const storedResults = localStorage.getItem('testResults');
-        const earned = new Set<string>();
+        const fetchAchievements = async () => {
+            setIsLoading(true);
+            const userName = localStorage.getItem('userName') || 'guest';
+            const results = await getLatestTestResult(userName, 'time-and-distance');
+            const earned = new Set<string>();
 
-        if (storedResults) {
-            const results = JSON.parse(storedResults);
-            earned.add('first_test');
-            
-            if (results.score >= 90) {
-                earned.add('mastered_topic');
+            if (results) {
+                earned.add('first_test');
+                
+                if (results.score >= 90) {
+                    earned.add('mastered_topic');
+                }
+                
+                const allFast = results.timings.every((t: number) => t < 30);
+                if (allFast) {
+                    earned.add('quick_thinker');
+                }
             }
             
-            const allFast = results.timings.every((t: number) => t < 30);
-            if (allFast) {
-                earned.add('quick_thinker');
+            // Mock a streak for demo purposes
+            if (results) {
+              earned.add('streak_5');
             }
+
+            setEarnedAchievements(earned);
+            setIsLoading(false);
         }
-        
-        // Mock a streak for demo purposes
-        earned.add('streak_5');
-
-        setEarnedAchievements(earned);
-        setIsLoading(false);
+        fetchAchievements();
     }, []);
 
     if (isLoading) {

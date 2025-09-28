@@ -9,14 +9,17 @@ import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
+import { getLatestTestResult } from "@/lib/firestore";
+
 
 type Achievement = {
+    id: string;
     icon: React.ReactNode;
     title: string;
     description: string;
 };
 
-const achievementList = [
+const achievementList: Achievement[] = [
     { id: 'mastered_topic', icon: <Medal className="text-amber-500" />, title: "Mastered Time & Distance", description: "Achieved 90%+ accuracy." },
     { id: 'quick_thinker', icon: <Star className="text-yellow-500" />, title: "Quick Thinker", description: "Answered all questions in under 30s each." },
     { id: 'streak_5', icon: <Zap className="text-blue-500" />, title: "5-Day Streak", description: "Completed a test every day for 5 days." },
@@ -27,34 +30,34 @@ export default function Achievements() {
     const [earnedAchievements, setEarnedAchievements] = useState<Achievement[]>([]);
 
     useEffect(() => {
-        setIsLoading(true);
-        const storedResults = localStorage.getItem('testResults');
-        const achievements: Achievement[] = [];
+        const fetchAchievements = async () => {
+            setIsLoading(true);
+            const userName = localStorage.getItem('userName') || 'guest';
+            const results = await getLatestTestResult(userName, 'time-and-distance');
+            const achievements: Achievement[] = [];
 
-        if (storedResults) {
-            const results = JSON.parse(storedResults);
-            
-            // Achievement: Mastered Time & Distance
-            if (results.score >= 90) {
-                const achievement = achievementList.find(a => a.id === 'mastered_topic');
-                if (achievement) achievements.push(achievement);
+            if (results) {
+                // Achievement: Mastered Time & Distance
+                if (results.score >= 90) {
+                    const achievement = achievementList.find(a => a.id === 'mastered_topic');
+                    if (achievement) achievements.push(achievement);
+                }
+                
+                // Achievement: Quick Thinker
+                const allFast = results.timings.every((t: number) => t < 30);
+                if (allFast) {
+                    const achievement = achievementList.find(a => a.id === 'quick_thinker');
+                    if (achievement) achievements.push(achievement);
+                }
+                 // Mock a streak for demo purposes as it requires historical data
+                const streakAchievement = achievementList.find(a => a.id === 'streak_5');
+                if (streakAchievement) achievements.push(streakAchievement);
             }
             
-            // Achievement: Quick Thinker
-            const allFast = results.timings.every((t: number) => t < 30);
-            if (allFast) {
-                const achievement = achievementList.find(a => a.id === 'quick_thinker');
-                if (achievement) achievements.push(achievement);
-            }
-        }
-        
-        // Mock a streak for demo purposes as it requires historical data
-        const streakAchievement = achievementList.find(a => a.id === 'streak_5');
-        if (streakAchievement) achievements.push(streakAchievement);
-
-
-        setEarnedAchievements(achievements);
-        setIsLoading(false);
+            setEarnedAchievements(achievements);
+            setIsLoading(false);
+        };
+        fetchAchievements();
     }, []);
 
     if (isLoading) {

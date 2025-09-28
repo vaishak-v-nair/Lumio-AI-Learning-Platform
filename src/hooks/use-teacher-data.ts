@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { generateLearningRecommendation } from '@/ai/flows/generate-learning-recommendation';
 import type { LearningRecommendationOutput } from '@/ai/flows/generate-learning-recommendation';
+import { getLatestTestResult } from '@/lib/firestore';
 
 type HeatmapDataItem = {
     student: string;
@@ -18,13 +19,11 @@ export function useTeacherData() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // In a real app, this would fetch data from a database.
-                // We'll use localStorage to simulate this for now, based on Sanga's test results.
-                const storedResults = localStorage.getItem('testResults');
+                const userName = localStorage.getItem('userName') || 'guest';
+                const results = await getLatestTestResult(userName, 'time-and-distance');
                 const studentData: HeatmapDataItem[] = [];
 
-                if (storedResults) {
-                     const results = JSON.parse(storedResults);
+                if (results) {
                      const categoryData: { topic: string; time: number }[] = [];
                      const categories: { [key: string]: number[] } = {};
 
@@ -35,7 +34,6 @@ export function useTeacherData() {
                         categories[q.category].push(results.timings[index]);
                      });
                      
-                     // Ensure all 4 categories are present, even if with no data
                      const allCategories = ['Listening', 'Grasping', 'Retention', 'Application'];
                      allCategories.forEach(cat => {
                          if (!categories[cat]) {
@@ -49,12 +47,11 @@ export function useTeacherData() {
                         categoryData.push({ topic: category, time: avgTime });
                      }
 
-                     studentData.push({ student: 'Sanga', data: categoryData });
+                     studentData.push({ student: results.userId, data: categoryData });
                 }
                 
                 setHeatmapData(studentData);
 
-                // Fetch AI-powered insights
                 const recommendation: LearningRecommendationOutput = await generateLearningRecommendation({
                     studentId: 'class_summary',
                     weakness: 'Retention',

@@ -13,6 +13,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import TestHint from './TestHint';
 import TestFeedback from './TestFeedback';
+import { saveTestResult } from '@/lib/firestore';
 
 const FAST_ANSWER_THRESHOLD = 5; // seconds
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
@@ -29,6 +30,7 @@ export default function TestClient({ testId }: { testId: string }) {
     const [startTime, setStartTime] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [feedback, setFeedback] = useState<{ message: string; correct: boolean } | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     const router = useRouter();
     const { toast } = useToast();
@@ -144,7 +146,8 @@ export default function TestClient({ testId }: { testId: string }) {
         }
     };
 
-    const finishTest = (finalAnswers: (number | null)[], finalTimings: number[]) => {
+    const finishTest = async (finalAnswers: (number | null)[], finalTimings: number[]) => {
+        setIsSaving(true);
         let correctCount = 0;
         finalAnswers.forEach((answer, index) => {
             if (answer === testData!.questions[index].correctAnswerIndex) {
@@ -153,17 +156,35 @@ export default function TestClient({ testId }: { testId: string }) {
         });
         const finalScore = (correctCount / testData!.questions.length) * 100;
         setScore(finalScore);
-        setIsFinished(true);
+
+        const userName = localStorage.getItem('userName') || 'guest';
 
         const results = {
+            userId: userName,
             score: finalScore,
             answers: finalAnswers,
             timings: finalTimings,
             questions: testData!.questions,
             testId,
             date: new Date().toISOString(),
+            topic: 'time-and-distance'
         };
-        localStorage.setItem('testResults', JSON.stringify(results));
+
+        const docId = await saveTestResult(results);
+        if (docId) {
+             // Store a reference to the result in local storage for hooks to use.
+            localStorage.setItem('lastTestResultId', docId);
+            localStorage.setItem('lastTestResult', JSON.stringify(results));
+        } else {
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: 'Could not save your test results to the database. Your dashboard may not update.',
+            });
+             localStorage.setItem('lastTestResult', JSON.stringify(results)); // Fallback to local storage
+        }
+        setIsFinished(true);
+        setIsSaving(false);
     };
     
     if (isLoading) {
@@ -200,6 +221,16 @@ export default function TestClient({ testId }: { testId: string }) {
                     </Button>
                 </CardFooter>
             </Card>
+        );
+    }
+
+    if (isSaving) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                <h2 className="text-2xl font-semibold mb-2">Saving Your Results</h2>
+                <p className="text-muted-foreground">Please wait...</p>
+            </div>
         );
     }
     

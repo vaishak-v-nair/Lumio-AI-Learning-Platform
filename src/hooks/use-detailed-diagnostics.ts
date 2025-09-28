@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { getLatestTestResult } from '@/lib/firestore';
 
 type PerformanceDataItem = {
   fundamental: string;
@@ -32,11 +33,11 @@ export function useDetailedDiagnostics() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const userName = localStorage.getItem('userName') || 'guest';
       
-      const storedResults = localStorage.getItem('testResults');
-      if (storedResults && topic === 'time-and-distance') { // Only show data for the relevant topic
-          const results = JSON.parse(storedResults);
+      const results = await getLatestTestResult(userName, 'time-and-distance');
+      
+      if (results && topic === 'time-and-distance') {
           const categoryData: { [key: string]: { times: number[], corrects: number[] } } = {};
 
           results.questions.forEach((q: any, index: number) => {
