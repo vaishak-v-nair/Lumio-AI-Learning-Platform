@@ -2,7 +2,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { LayoutDashboard, LogOut, GraduationCap, User, BarChart, Trophy } from "lucide-react";
+import { LayoutDashboard, LogOut, GraduationCap, User, BarChart, Trophy, Settings } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -111,8 +111,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                     <Link href="/profile">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                     <Link href="/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                     </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/" onClick={handleLogout}>
