@@ -5,14 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Link from "next/link";
 import Achievements from "@/components/dashboard/Achievements";
 import LearningRecommendations from "@/components/dashboard/LearningRecommendations";
-import { TestResultProvider } from "@/context/TestResultContext";
 import OnboardingTour from "@/components/dashboard/OnboardingTour";
 import ProgressOverview from "@/components/dashboard/ProgressOverview";
 
 
 export default function DashboardPage() {
     return (
-        <TestResultProvider>
+        <>
             <OnboardingTour />
              <div className="p-4 sm:p-6 space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -67,6 +66,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
-        </TestResultProvider>
+        </>
     );
 }

@@ -6,11 +6,11 @@ import { LayoutDashboard, LogOut, GraduationCap, User, Trophy, Settings, Users }
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { LumioLogo } from "@/components/LumioLogo";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { TestResultProvider } from "@/context/TestResultContext";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("Guest");
@@ -155,16 +155,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
            </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
-            <div className="flex items-center gap-4">
-                <div className="md:hidden">
-                    <SidebarTrigger />
-                </div>
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-center border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
+            <div className="flex items-center gap-4 md:hidden">
+                <SidebarTrigger />
             </div>
           </header>
           <main className="flex-1">
               <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
-                {children}
+                <TestResultProvider>
+                    {children}
+                </TestResultProvider>
               </div>
           </main>
         </SidebarInset>
