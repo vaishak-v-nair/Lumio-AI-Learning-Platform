@@ -143,8 +143,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 p-4 sm:py-6 space-y-6">
-            {children}
+          <main className="flex-1 p-4 sm:py-6">
+            <div className="mx-auto w-full space-y-6">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </div>
