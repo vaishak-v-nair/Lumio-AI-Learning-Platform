@@ -11,7 +11,7 @@ import { TestResultProvider } from "@/context/TestResultContext";
 export default function DashboardPage() {
     return (
         <TestResultProvider>
-            <div className="space-y-6">
+            <div className="mx-auto w-full max-w-4xl space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
