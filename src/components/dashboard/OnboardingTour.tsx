@@ -76,30 +76,37 @@ export default function OnboardingTour() {
     }, []);
 
      useEffect(() => {
-        if (!isOpen) return;
+        if (!isOpen || !isClient) return;
 
         const step = tourSteps[currentStep];
         const targetId = step.targetId;
 
-        if (targetId) {
-            const element = document.getElementById(targetId);
-            if (element) {
-                const rect = element.getBoundingClientRect();
-                setHighlightStyle({
-                    top: rect.top,
-                    left: rect.left,
-                    width: rect.width,
-                    height: rect.height,
-                });
-                if(!isMobile) {
-                   element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const updateHighlight = () => {
+            if (targetId) {
+                const element = document.getElementById(targetId);
+                if (element) {
+                    const rect = element.getBoundingClientRect();
+                    setHighlightStyle({
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height,
+                    });
+                     if(!isMobile) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    }
                 }
+            } else {
+                setHighlightStyle(null);
             }
-        } else {
-            setHighlightStyle(null);
-        }
+        };
+
+        // Delay to allow for layout shifts and scrolling
+        const timeoutId = setTimeout(updateHighlight, 100);
+
+        return () => clearTimeout(timeoutId);
         
-    }, [currentStep, isOpen, isMobile]);
+    }, [currentStep, isOpen, isClient, isMobile]);
 
 
     const handleNext = () => {
@@ -128,26 +135,53 @@ export default function OnboardingTour() {
 
     const step = tourSteps[currentStep];
 
-    const getDialogPosition = () => {
+    const getDialogPosition = (): React.CSSProperties => {
         if (!highlightStyle || !dialogRef.current) return {};
-        const dialogHeight = dialogRef.current.offsetHeight;
-        const top = highlightStyle.top! + highlightStyle.height! / 2 - dialogHeight / 2;
         
-        let left;
-        const margin = 20;
-
-        if (highlightStyle.left! > window.innerWidth / 2) {
-             left = highlightStyle.left! - dialogRef.current.offsetWidth - margin;
-        } else {
-             left = highlightStyle.left! + highlightStyle.width! + margin;
+        if (isMobile) {
+            return {
+                bottom: '20px',
+                left: '20px',
+                right: '20px',
+                top: 'auto',
+                transform: 'none',
+            };
         }
 
-        return { top: Math.max(20, top), left: Math.max(20, left) };
+        const dialogHeight = dialogRef.current.offsetHeight;
+        const dialogWidth = dialogRef.current.offsetWidth;
+        const space = 20;
+
+        let top = highlightStyle.top! + highlightStyle.height! / 2 - dialogHeight / 2;
+        let left;
+
+        // Prefer placing on the right
+        if (highlightStyle.left! + highlightStyle.width! + dialogWidth + space < window.innerWidth) {
+            left = highlightStyle.left! + highlightStyle.width! + space;
+        } 
+        // Place on the left
+        else if (highlightStyle.left! - dialogWidth - space > 0) {
+            left = highlightStyle.left! - dialogWidth - space;
+        }
+        // Fallback to above/below
+        else {
+            top = highlightStyle.top! - dialogHeight - space;
+            left = highlightStyle.left! + highlightStyle.width! / 2 - dialogWidth / 2;
+        }
+
+        return { 
+            top: `${Math.max(space, top)}px`, 
+            left: `${Math.max(space, left)}px`,
+            transform: 'none'
+        };
     };
 
     return (
         <>
-            {highlightStyle && <div className="fixed inset-0 bg-black/60 z-[100]" />}
+            {/* Full screen overlay */}
+            {highlightStyle && <div className="fixed inset-0 bg-black/60 z-[100] animate-in fade-in-0" />}
+
+            {/* Highlight Box */}
             {highlightStyle && (
                 <div
                     className="fixed rounded-lg border-2 border-primary shadow-2xl transition-all duration-300 z-[101]"
@@ -157,15 +191,23 @@ export default function OnboardingTour() {
                         width: `${highlightStyle.width! + 8}px`,
                         height: `${highlightStyle.height! + 8}px`,
                         boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
+                        pointerEvents: 'none'
                     }}
                 />
             )}
-             <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogContent
                     ref={dialogRef}
-                    className={cn("sm:max-w-md fixed z-[102] transition-all duration-300", !highlightStyle && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2")}
+                    className={cn(
+                        "sm:max-w-md fixed z-[102] transition-all duration-300",
+                        !highlightStyle && "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                    )}
                     style={highlightStyle ? getDialogPosition() : {}}
-                    onInteractOutside={ (e) => e.preventDefault() }
+                    onInteractOutside={(e) => {
+                        e.preventDefault();
+                        finishTour();
+                    }}
                     onEscapeKeyDown={finishTour}
                 >
                     <DialogHeader className="text-center items-center pt-4">
@@ -186,10 +228,10 @@ export default function OnboardingTour() {
                             />
                         ))}
                     </div>
-                    <DialogFooter className="sm:justify-between flex-row">
-                        {currentStep > 0 ? (
+                    <DialogFooter className={cn("sm:justify-between flex-row", currentStep === 0 && "sm:justify-end")}>
+                        {currentStep > 0 && (
                             <Button variant="ghost" onClick={handlePrevious}>Previous</Button>
-                        ) : <div />}
+                        )}
 
                         <Button onClick={handleNext}>
                             {currentStep === tourSteps.length - 1 ? 'Finish' : 'Next'}
@@ -200,4 +242,3 @@ export default function OnboardingTour() {
         </>
     );
 }
-
