@@ -10,16 +10,11 @@ import { Loader2 } from 'lucide-react';
 export default function NewTestPage() {
     const router = useRouter();
     const { toast } = useToast();
-    const [status, setStatus] = useState('Analyzing your profile...');
+    const [status, setStatus] = useState('Generating personalized questions...');
 
     useEffect(() => {
         const createTest = async () => {
             try {
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                
-                setStatus('Identifying weak areas...');
-                await new Promise(resolve => setTimeout(resolve, 1500));
-
                 setStatus('Generating personalized questions for Time & Distance...');
                 const testData = await generateQuestionsFromTopicData({
                     topic: 'Time & Distance',
@@ -33,7 +28,6 @@ export default function NewTestPage() {
                 }
 
                 setStatus('Redirecting to your test...');
-                await new Promise(resolve => setTimeout(resolve, 1000));
                 router.push(`/test/${testId}`);
 
             } catch (error) {
