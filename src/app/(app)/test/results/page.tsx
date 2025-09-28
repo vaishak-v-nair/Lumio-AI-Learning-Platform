@@ -32,7 +32,7 @@ export default function TestResultsPage() {
 
     if (isResultLoading || !result) {
         return (
-            <div className="flex justify-center items-center h-[calc(100vh-8.5rem)]">
+            <div className="flex justify-center items-center h-full w-full">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
         );
@@ -46,8 +46,8 @@ export default function TestResultsPage() {
 
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
-            <Card className="text-center">
+        <div className="flex flex-col items-center justify-center w-full space-y-6">
+            <Card className="text-center w-full">
                 <CardHeader>
                     <CardTitle className="text-3xl font-bold font-headline">Test Complete!</CardTitle>
                     <CardDescription>Here's a summary of your performance.</CardDescription>
@@ -60,7 +60,7 @@ export default function TestResultsPage() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
                 <LearningRecommendations />
                 <Card>
                     <CardHeader>
@@ -84,7 +84,9 @@ export default function TestResultsPage() {
                 </Card>
             </div>
             
-            <DetailedDiagnosticReport />
+            <div className="w-full">
+                <DetailedDiagnosticReport />
+            </div>
 
             <div className="flex justify-center mt-6">
                 <Link href="/dashboard">
