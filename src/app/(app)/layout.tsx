@@ -92,22 +92,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Profile" isActive={isActive('/profile')}>
-                     <Link href="/profile">
-                        <User />
-                        <span>Profile</span>
-                     </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Settings" isActive={isActive('/settings')}>
-                     <Link href="/settings">
-                        <Settings/>
-                        <span>Settings</span>
-                     </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
             </SidebarMenu>
 
             <SidebarGroup>
@@ -149,6 +133,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-56" side="right" sideOffset={8}>
                   <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link href="/profile">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="cursor-pointer">
+                    <Link href="/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
@@ -163,9 +160,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
-            </div>
-            <div className="flex items-center gap-4">
-                {/* Future icons can go here */}
             </div>
           </header>
           <main className="flex-1">
