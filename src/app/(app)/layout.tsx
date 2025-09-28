@@ -1,4 +1,5 @@
 
+"use client";
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { LayoutDashboard, LogOut, GraduationCap, User, BarChart, Trophy } from "lucide-react";
@@ -7,11 +8,30 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LumioLogo } from "@/components/LumioLogo";
+import { useEffect, useState } from "react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+  const [userName, setUserName] = useState("Guest");
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedName = localStorage.getItem('userName');
+      if (storedName) {
+        setUserName(storedName);
+      }
+    }
+  }, []);
+
   const user = {
-    name: "Sanga",
-    avatar: "https://picsum.photos/seed/user-avatar/32/32"
+    name: userName,
+    avatar: `https://picsum.photos/seed/${userName}/32/32`
+  };
+
+  const handleLogout = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('userName');
+      localStorage.removeItem('testResults');
+    }
   };
 
   return (
@@ -27,7 +47,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Dashboard" isActive={true}>
+                <SidebarMenuButton asChild tooltip="Dashboard">
                   <Link href="/dashboard">
                     <LayoutDashboard />
                     <span>Dashboard</span>
@@ -84,7 +104,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   >
                     <Avatar>
                       <AvatarImage src={user.avatar} alt="User avatar" />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -95,7 +115,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/">
+                    <Link href="/" onClick={handleLogout}>
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </Link>

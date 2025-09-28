@@ -21,10 +21,13 @@ export default function AuthForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
+  const [email, setEmail] = useState('');
 
   const handleAuthAction = (e: React.FormEvent, action: 'login' | 'signup' | 'guest') => {
     e.preventDefault();
     setIsLoading(true);
+
+    // Simulate network delay
     setTimeout(() => {
       if (action === 'signup') {
         toast({
@@ -32,10 +35,15 @@ export default function AuthForm() {
             description: 'You have successfully signed up. Please log in.',
         });
         setActiveTab('login');
+        setIsLoading(false);
       } else {
+        if (typeof window !== 'undefined') {
+            const name = action === 'guest' ? 'Guest' : email.split('@')[0];
+            localStorage.setItem('userName', name);
+        }
         router.push('/dashboard');
+        // We don't call setIsLoading(false) here because we are navigating away.
       }
-      setIsLoading(false);
     }, 1500);
   };
 
@@ -57,7 +65,7 @@ export default function AuthForm() {
             <form onSubmit={(e) => handleAuthAction(e, 'login')} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email-login">Email</Label>
-                <Input id="email-login" type="email" placeholder="m@example.com" required />
+                <Input id="email-login" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password-login">Password</Label>
