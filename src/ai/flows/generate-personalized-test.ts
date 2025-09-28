@@ -79,26 +79,32 @@ const generatePersonalizedTestFlow = ai.defineFlow(
       const llmResponse = await prompt(input);
       const output = llmResponse.output;
 
-      if (!output) {
-        console.error("LLM failed to produce a valid output.", llmResponse);
-        const text = llmResponse.text;
-        const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-        const match = text.match(jsonRegex);
-        if (match && match[1]) {
-          try {
-            const extractedJson = JSON.parse(match[1]);
-            const validation = GeneratePersonalizedTestOutputSchema.safeParse(extractedJson);
-            if (validation.success) {
-              return validation.data;
-            }
-          } catch (jsonError) {
-            console.error("Failed to parse extracted JSON:", jsonError);
-          }
-        }
-        throw new Error("Failed to get a valid response from the model. Please try again later.");
+      if (output) {
+        return output;
       }
       
-      return output;
+      console.warn("LLM did not produce a structured output. Attempting to parse from text.");
+      const text = llmResponse.text;
+      const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+      const match = text.match(jsonRegex);
+
+      if (match && match[1]) {
+        try {
+          const extractedJson = JSON.parse(match[1]);
+          const validation = GeneratePersonalizedTestOutputSchema.safeParse(extractedJson);
+          if (validation.success) {
+            console.log("Successfully parsed JSON from text fallback.");
+            return validation.data;
+          } else {
+            console.error("Parsed JSON does not match schema:", validation.error);
+          }
+        } catch (jsonError) {
+          console.error("Failed to parse extracted JSON from text:", jsonError);
+        }
+      }
+      
+      throw new Error("Failed to get a valid response from the model. Please try again later.");
+
     } catch (error) {
       console.error("Error in generatePersonalizedTestFlow:", error);
       throw new Error("Failed to generate a personalized test due to a service error. Please try again later.");
