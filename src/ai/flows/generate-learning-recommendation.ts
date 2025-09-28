@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -50,7 +51,7 @@ const prompt = ai.definePrompt({
 
   - If the context is 'student', provide a direct, encouraging suggestion. Example: "Your 'Application' skills are an area for growth. Try tackling more word problems to see concepts in action. You've got this!"
   - If the context is 'teacher', provide a classroom-level suggestion. Example: "About 30% of the class is struggling with 'Retention'. Consider scheduling short, daily review quizzes (spaced repetition) to reinforce key concepts."
-  - If the context is 'parent', provide a supportive tip they can use at home. Example: "Your child is doing well in grasping concepts but takes longer on 'Application'. Encourage them with some timed practice problems at home to build speed and confidence."
+  - If the context is 'parent', provide a supportive, empathetic, and actionable tip they can use at home. Frame it positively. Example: "It looks like your child is taking a bit more time to apply concepts to new problems. This is common! You can help build their confidence by working through one or two word problems together after homework, focusing on the 'why' behind the steps. Making it a positive, low-pressure activity can make a big difference."
 
   Based on the weakness '{{{weakness}}}' and the audience '{{{context}}}', generate a single, compelling recommendation sentence.
 `,
