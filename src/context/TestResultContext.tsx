@@ -20,15 +20,21 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     const userName = localStorage.getItem('userName') || 'guest';
     
-    // First, try to get from localStorage for immediate feedback on results page
-    const localResult = localStorage.getItem('lastTestResult');
-    if (localResult) {
-        setLatestResult(JSON.parse(localResult));
-        setIsLoading(false);
-        return; // Exit early if we have local storage data
-    } 
+    // On the results page, we want immediate feedback.
+    // The `useTestResultData` hook handles loading from localStorage for that specific page.
+    // For all other pages (Dashboard, Profile), we should fetch from Firestore to get the true latest result.
+    const isResultsPage = window.location.pathname.includes('/test/results');
+
+    if (isResultsPage) {
+        const localResult = localStorage.getItem('lastTestResult');
+        if (localResult) {
+            setLatestResult(JSON.parse(localResult));
+            setIsLoading(false);
+            return;
+        }
+    }
     
-    // Fallback to Firestore for dashboard loading
+    // For all other pages, or if local storage is empty, fetch from Firestore.
     const result = await getLatestTestResult(userName, 'time-and-distance');
     setLatestResult(result);
     if (result) {
@@ -58,5 +64,3 @@ export function useTestResult() {
   }
   return context;
 }
-
-    

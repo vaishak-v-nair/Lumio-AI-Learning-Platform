@@ -18,6 +18,7 @@ import { getCroppedImg } from '@/lib/canvas-utils';
 import { useToast } from "@/hooks/use-toast";
 import { Slider } from "@/components/ui/slider";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Stat = {
     label: string;
@@ -361,21 +362,37 @@ export default function ProfilePage() {
                     <CardDescription>An overview of your learning journey so far.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                        {stats.map((stat, index) => (
-                            <Card key={index}>
-                                <CardContent className="p-6 flex items-center gap-4">
-                                     <div className="p-3 bg-secondary rounded-full">
-                                         {stat.icon}
-                                     </div>
-                                    <div>
-                                        <p className="text-2xl font-bold">{stat.value}</p>
-                                        <p className="text-sm text-muted-foreground">{stat.label}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                    {isLoading ? (
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            {[...Array(4)].map((_, index) => (
+                                <Card key={index}>
+                                    <CardContent className="p-6 flex items-center gap-4">
+                                        <Skeleton className="h-12 w-12 rounded-full" />
+                                        <div>
+                                            <Skeleton className="h-7 w-16" />
+                                            <Skeleton className="h-4 w-24 mt-1" />
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            {stats.map((stat, index) => (
+                                <Card key={index}>
+                                    <CardContent className="p-6 flex items-center gap-4">
+                                        <div className="p-3 bg-secondary rounded-full">
+                                            {stat.icon}
+                                        </div>
+                                        <div>
+                                            <p className="text-2xl font-bold">{stat.value}</p>
+                                            <p className="text-sm text-muted-foreground">{stat.label}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             <div className="flex justify-end gap-2">
