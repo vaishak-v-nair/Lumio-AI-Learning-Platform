@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,8 @@ import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
 import { Trophy } from "lucide-react";
+import Link from "next/link";
+import { Button } from "../ui/button";
 
 type Achievement = {
     icon: React.ReactNode;
@@ -74,11 +77,11 @@ export default function Achievements() {
         <Card>
             <CardHeader>
                 <CardTitle>Your Achievements</CardTitle>
-                <CardDescription>Keep up the great work!</CardDescription>
+                <CardDescription>A glimpse of your recent accomplishments.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {earnedAchievements.length > 0 ? (
-                    earnedAchievements.map((achievement, index) => (
+                    earnedAchievements.slice(0, 2).map((achievement, index) => (
                         <div key={index} className="flex items-center gap-4 p-3 bg-secondary rounded-lg">
                             <div className="p-2 bg-background rounded-full">
                                {achievement.icon}
@@ -98,6 +101,9 @@ export default function Achievements() {
                         </AlertDescription>
                     </Alert>
                 )}
+                 <Link href="/achievements" className="!mt-6 block">
+                    <Button variant="outline" className="w-full">View All Achievements</Button>
+                </Link>
             </CardContent>
         </Card>
     );

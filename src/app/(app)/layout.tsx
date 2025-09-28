@@ -1,3 +1,4 @@
+
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { LayoutDashboard, LogOut, GraduationCap, User, BarChart, Trophy } from "lucide-react";
@@ -30,7 +31,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="My Achievements">
-                  <Link href="#">
+                  <Link href="/achievements">
                     <Trophy />
                     <span>My Achievements</span>
                   </Link>
