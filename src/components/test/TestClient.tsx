@@ -9,9 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import Image from 'next/image';
+import { Loader2, ArrowRight } from 'lucide-react';
 import TestHint from './TestHint';
 import TestFeedback from './TestFeedback';
 import { saveTestResult } from '@/lib/firestore';
@@ -19,7 +17,6 @@ import { dynamicallyScoreQuestion } from '@/ai/flows/dynamically-score-questions
 import { refineTestDifficulty } from '@/ai/flows/refine-test-difficulty';
 import { explainAnswer } from '@/ai/flows/explain-answer';
 
-const FAST_ANSWER_THRESHOLD = 5; // seconds
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
 
 export default function TestClient({ testId }: { testId: string }) {
@@ -30,7 +27,6 @@ export default function TestClient({ testId }: { testId: string }) {
     const [scores, setScores] = useState<number[]>([]);
     const [timings, setTimings] = useState<number[]>([]);
     const [isFinished, setIsFinished] = useState(false);
-    const [finalScore, setFinalScore] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [startTime, setStartTime] = useState(0);
     const [showHint, setShowHint] = useState(false);
@@ -40,7 +36,6 @@ export default function TestClient({ testId }: { testId: string }) {
 
     const router = useRouter();
     const { toast } = useToast();
-    const successImage = PlaceHolderImages.find(p => p.id === 'test-complete');
 
     useEffect(() => {
         setIsClient(true);
@@ -111,7 +106,6 @@ export default function TestClient({ testId }: { testId: string }) {
 
             const isCorrect = scoringResult.score > 70;
             
-            // Set feedback and score from the results
             setFeedback({ 
                 message: scoringResult.feedback, 
                 correct: isCorrect, 
@@ -122,7 +116,6 @@ export default function TestClient({ testId }: { testId: string }) {
             updatedScores[currentQuestionIndex] = scoringResult.score;
             setScores(updatedScores);
 
-            // Update difficulty in the background
             if (testData) {
                 const newDifficultyString: 'easy' | 'medium' | 'hard' = difficultyResult.newDifficulty <= 1 ? 'easy' : difficultyResult.newDifficulty <= 2 ? 'medium' : 'hard';
                 const newQuestions = [...testData.questions];
@@ -131,14 +124,12 @@ export default function TestClient({ testId }: { testId: string }) {
                 console.log(`Difficulty Adjustment: ${difficultyResult.reasoning}. New level: ${newDifficultyString}`);
             }
 
-            // Decide whether to show a hint
             if (!isCorrect && timeTaken > SLOW_ANSWER_THRESHOLD) {
                 setShowHint(true);
             }
 
         } catch (error) {
             console.error("Error during answer processing:", error);
-            // Fallback to simpler logic if any AI call fails
             setFeedback({ 
                 message: isCorrectManual ? 'Correct!' : `The correct answer was: ${expectedAnswerText}`, 
                 correct: isCorrectManual,
@@ -154,7 +145,6 @@ export default function TestClient({ testId }: { testId: string }) {
             }
         }
 
-        // Update user answers and timings
         const updatedAnswers = [...userAnswers];
         updatedAnswers[currentQuestionIndex] = selectedAnswer;
         setUserAnswers(updatedAnswers);
@@ -165,21 +155,11 @@ export default function TestClient({ testId }: { testId: string }) {
 
         setIsSubmitting(false);
     };
-
-    const proceedToNextStep = () => {
-        if (showHint) {
-            setSelectedAnswer(null); // Keep user on the same question to see hint
-            setShowHint(true);
-            setFeedback(null); // Hide feedback to show hint
-        } else {
-            goToNextQuestion();
-        }
-    };
     
     const goToNextQuestion = () => {
         setFeedback(null);
         setSelectedAnswer(null);
-        setShowHint(false); // Make sure to reset hint state
+        setShowHint(false);
 
         if (currentQuestionIndex < testData!.questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -190,7 +170,6 @@ export default function TestClient({ testId }: { testId: string }) {
 
     const finishTest = (finalAnswers: (number | null)[], finalTimings: number[], finalScores: number[]) => {
         const averageScore = finalScores.reduce((a, b) => a + b, 0) / finalScores.length;
-        setFinalScore(averageScore);
         setIsFinished(true);
 
         const userName = localStorage.getItem('userName') || 'guest';
@@ -211,53 +190,26 @@ export default function TestClient({ testId }: { testId: string }) {
         saveTestResult(results).then(docId => {
             if (docId) {
                 localStorage.setItem('lastTestResultId', docId);
+                 router.push('/test/results');
             } else {
                 toast({
                     variant: 'destructive',
                     title: 'Save Failed',
                     description: 'Could not save your test results to the database. Your dashboard may not update.',
                 });
+                router.push('/dashboard');
             }
         });
     };
     
     if (isLoading || !isClient) {
-        return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
+        return <div className="flex justify-center items-center h-[calc(100vh-8.5rem)]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
     }
 
-    if (!testData) {
-        return <div className="text-center text-destructive">Failed to load test. Please return to the dashboard.</div>;
+    if (!testData || isFinished) {
+        return <div className="flex justify-center items-center h-[calc(100vh-8.5rem)]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
     }
     
-    if (isFinished) {
-        return (
-            <Card className="w-full max-w-2xl mx-auto text-center">
-                <CardHeader>
-                    <CardTitle className="text-3xl">Test Complete!</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {successImage && <Image src={successImage.imageUrl} alt={successImage.description} data-ai-hint={successImage.imageHint} width={400} height={300} className="mx-auto rounded-lg" />}
-                    <p className="text-xl text-muted-foreground">Your Score:</p>
-                    <p className={`text-5xl font-bold ${finalScore >= 70 ? 'text-green-500' : 'text-destructive'}`}>{Math.round(finalScore)}%</p>
-                    <div className="pt-4 text-left">
-                        <h3 className="font-semibold text-lg mb-2">Review Your Answers</h3>
-                        {testData.questions.map((q, index) => (
-                            <div key={index} className="flex items-center justify-between p-2 border-b">
-                                <p className="flex-1 pr-4">{index + 1}. {q.questionText}</p>
-                                {scores[index] > 70 ? <CheckCircle className="text-green-500"/> : <XCircle className="text-destructive"/>}
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button onClick={() => router.push('/dashboard')} className="w-full">
-                        Back to Dashboard
-                    </Button>
-                </CardFooter>
-            </Card>
-        );
-    }
-
     const currentQuestion = testData.questions[currentQuestionIndex];
     const progressValue = ((currentQuestionIndex + 1) / testData.questions.length) * 100;
 

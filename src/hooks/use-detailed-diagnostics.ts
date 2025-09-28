@@ -1,5 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useTestResult } from '@/context/TestResultContext';
+import { useTestResultData } from './use-test-result-data';
 
 type PerformanceDataItem = {
   fundamental: string;
@@ -25,7 +27,13 @@ const getIcon = (accuracy: number) => {
 
 export function useDetailedDiagnostics() {
   const [performanceData, setPerformanceData] = useState<PerformanceDataItem[]>([]);
-  const { latestResult: results, isLoading } = useTestResult();
+  // Use local storage hook for instant results on the results page
+  const { result: immediateResult, isLoading: isImmediateLoading } = useTestResultData();
+  // Use context for general dashboard data
+  const { latestResult: contextResult, isLoading: isContextLoading } = useTestResult();
+
+  const results = immediateResult || contextResult;
+  const isLoading = isImmediateLoading || isContextLoading;
 
   useEffect(() => {
       if (results) {
@@ -75,3 +83,5 @@ export function useDetailedDiagnostics() {
 
   return { performanceData, timeVsAccuracyData, radarChartData, isLoading, hasData };
 }
+
+    
