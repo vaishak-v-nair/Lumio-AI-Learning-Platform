@@ -23,6 +23,9 @@ export default function ProfilePage() {
     const [avatar, setAvatar] = useState(`https://picsum.photos/seed/Guest/128/128`);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isCaptureDialogOpen, setIsCaptureDialogOpen] = useState(false);
+    const [isClient, setIsClient] = useState(false);
+    const [memberSince, setMemberSince] = useState('');
+
 
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -37,27 +40,27 @@ export default function ProfilePage() {
 
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const storedName = localStorage.getItem('userName');
-            if (storedName) {
-                setUserName(storedName);
-            }
-            const storedBio = localStorage.getItem('userBio');
-            if (storedBio) {
-                setBio(storedBio);
-            }
-            const storedAvatar = localStorage.getItem('userAvatar');
-             if (storedAvatar) {
-                setAvatar(storedAvatar);
-            } else {
-                setAvatar(`https://picsum.photos/seed/${storedName || 'Guest'}/128/128`);
-            }
+        setIsClient(true);
+        const storedName = localStorage.getItem('userName');
+        if (storedName) {
+            setUserName(storedName);
         }
+        const storedBio = localStorage.getItem('userBio');
+        if (storedBio) {
+            setBio(storedBio);
+        }
+        const storedAvatar = localStorage.getItem('userAvatar');
+         if (storedAvatar) {
+            setAvatar(storedAvatar);
+        } else {
+            setAvatar(`https://picsum.photos/seed/${storedName || 'Guest'}/128/128`);
+        }
+        setMemberSince(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     }, []);
 
     const user = {
         name: userName,
-        memberSince: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        memberSince: memberSince
     };
 
     const stats = [
@@ -75,10 +78,8 @@ export default function ProfilePage() {
         setUserName(newName);
         setBio(newBio);
 
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('userName', newName);
-            localStorage.setItem('userBio', newBio);
-        }
+        localStorage.setItem('userName', newName);
+        localStorage.setItem('userBio', newBio);
         
         setIsDialogOpen(false);
     };
@@ -95,7 +96,6 @@ export default function ProfilePage() {
             const objectURL = croppedImage; // This is already an object URL
             setAvatar(objectURL);
             
-            // To store it in localStorage, we need to convert it to a data URL
             const response = await fetch(objectURL);
             const blob = await response.blob();
             const reader = new FileReader();
@@ -163,7 +163,6 @@ export default function ProfilePage() {
                 context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
                 const dataUrl = canvas.toDataURL('image/png');
                 
-                // Stop video stream
                 const stream = video.srcObject as MediaStream;
                 if (stream) {
                     stream.getTracks().forEach(track => track.stop());
@@ -175,9 +174,13 @@ export default function ProfilePage() {
         }
     };
 
+    if (!isClient) {
+        return null;
+    }
+
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-6">
              {imageToCrop && (
                 <Dialog open={!!imageToCrop} onOpenChange={(open) => !open && setImageToCrop(null)}>
                     <DialogContent className="max-w-md">

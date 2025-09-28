@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -22,9 +22,16 @@ export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const [email, setEmail] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleAuthAction = (e: React.FormEvent, action: 'login' | 'signup' | 'guest') => {
     e.preventDefault();
+    if (!isClient) return;
+
     setIsLoading(true);
 
     // Simulate network delay
@@ -37,12 +44,9 @@ export default function AuthForm() {
         setActiveTab('login');
         setIsLoading(false);
       } else {
-        if (typeof window !== 'undefined') {
-            const name = action === 'guest' ? 'Guest' : email.split('@')[0];
-            localStorage.setItem('userName', name);
-        }
+        const name = action === 'guest' ? 'Guest' : email.split('@')[0];
+        localStorage.setItem('userName', name);
         router.push('/dashboard');
-        // We don't call setIsLoading(false) here because we are navigating away.
       }
     }, 1500);
   };
@@ -71,11 +75,11 @@ export default function AuthForm() {
                 <Label htmlFor="password-login">Password</Label>
                 <Input id="password-login" type="password" required />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || !isClient}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Login
               </Button>
-              <Button onClick={(e) => handleAuthAction(e, 'guest')} variant="outline" className="w-full" disabled={isLoading}>
+              <Button onClick={(e) => handleAuthAction(e, 'guest')} variant="outline" className="w-full" disabled={isLoading || !isClient}>
                 Continue as Guest
               </Button>
             </form>
@@ -100,7 +104,7 @@ export default function AuthForm() {
                 <Label htmlFor="password-signup">Password</Label>
                 <Input id="password-signup" type="password" required />
               </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button type="submit" className="w-full" disabled={isLoading || !isClient}>
                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
               </Button>

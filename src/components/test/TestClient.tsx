@@ -31,12 +31,14 @@ export default function TestClient({ testId }: { testId: string }) {
     const [showHint, setShowHint] = useState(false);
     const [feedback, setFeedback] = useState<{ message: string; correct: boolean } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [isClient, setIsClient] = useState(false);
 
     const router = useRouter();
     const { toast } = useToast();
     const successImage = PlaceHolderImages.find(p => p.id === 'test-complete');
 
     useEffect(() => {
+        setIsClient(true);
         const data = sessionStorage.getItem(`test_${testId}`);
         if (data) {
             const parsedData = JSON.parse(data);
@@ -55,10 +57,12 @@ export default function TestClient({ testId }: { testId: string }) {
     }, [testId, router, toast]);
 
     useEffect(() => {
-        setStartTime(Date.now());
+        if (isClient) {
+            setStartTime(Date.now());
+        }
         setShowHint(false);
         setFeedback(null);
-    }, [currentQuestionIndex]);
+    }, [currentQuestionIndex, isClient]);
 
     const adjustDifficulty = (question: Question, correct: boolean, timeTaken: number) => {
         let difficulty = question.difficulty;
@@ -172,22 +176,22 @@ export default function TestClient({ testId }: { testId: string }) {
 
         const docId = await saveTestResult(results);
         if (docId) {
-             // Store a reference to the result in local storage for hooks to use.
             localStorage.setItem('lastTestResultId', docId);
-            localStorage.setItem('lastTestResult', JSON.stringify(results));
         } else {
             toast({
                 variant: 'destructive',
                 title: 'Save Failed',
                 description: 'Could not save your test results to the database. Your dashboard may not update.',
             });
-             localStorage.setItem('lastTestResult', JSON.stringify(results)); // Fallback to local storage
         }
+        // Also save to local storage for immediate access by hooks without re-fetching
+        localStorage.setItem('lastTestResult', JSON.stringify(results));
+        
         setIsFinished(true);
         setIsSaving(false);
     };
     
-    if (isLoading) {
+    if (isLoading || !isClient) {
         return <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
     }
 

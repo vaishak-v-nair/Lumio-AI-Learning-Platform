@@ -13,34 +13,38 @@ import { useEffect, useState } from "react";
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("Guest");
   const [userAvatar, setUserAvatar] = useState(`https://picsum.photos/seed/Guest/32/32`);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedName = localStorage.getItem('userName');
-      if (storedName) {
-        setUserName(storedName);
-      }
-      const storedAvatar = localStorage.getItem('userAvatar');
-      if (storedAvatar) {
-        setUserAvatar(storedAvatar);
-      } else if (storedName) {
-        setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
-      }
+    setIsClient(true);
+    const storedName = localStorage.getItem('userName');
+    if (storedName) {
+      setUserName(storedName);
+    }
+    const storedAvatar = localStorage.getItem('userAvatar');
+    if (storedAvatar) {
+      setUserAvatar(storedAvatar);
+    } else if (storedName) {
+      setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
     }
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('userName');
+    localStorage.removeItem('testResults');
+    localStorage.removeItem('userBio');
+    localStorage.removeItem('userAvatar');
+    localStorage.removeItem('lastTestResultId');
+    localStorage.removeItem('lastTestResult');
+  };
+
+  if (!isClient) {
+    return null; // or a loading skeleton
+  }
 
   const user = {
     name: userName,
     avatar: userAvatar,
-  };
-
-  const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('userName');
-      localStorage.removeItem('testResults');
-      localStorage.removeItem('userBio');
-      localStorage.removeItem('userAvatar');
-    }
   };
 
   return (
@@ -143,8 +147,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 p-4 sm:py-6">
-            <div className="mx-auto w-full space-y-6">
+          <main className="flex-1 p-4 sm:p-6">
+            <div className="mx-auto w-full max-w-4xl space-y-6">
               {children}
             </div>
           </main>
