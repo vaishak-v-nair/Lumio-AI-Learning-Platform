@@ -157,11 +157,19 @@ export default function OnboardingTour() {
                 .tour-highlight {
                     position: relative;
                     z-index: 60;
-                    background-color: hsl(var(--background));
                     border: 2px solid hsl(var(--primary));
                     border-radius: var(--radius);
-                    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
                     transition: all 0.3s ease-in-out;
+                }
+                .tour-highlight::before {
+                    content: '';
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: rgba(0, 0, 0, 0.5);
+                    z-index: -1;
                 }
             `}</style>
         </Dialog>
