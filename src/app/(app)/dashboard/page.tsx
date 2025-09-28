@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Rocket, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import ProgressOverview from "@/components/dashboard/ProgressOverview";
-import DiagnosticReport from "@/components/dashboard/DiagnosticReport";
 import Achievements from "@/components/dashboard/Achievements";
 import LearningRecommendations from "@/components/dashboard/LearningRecommendations";
 import { TestResultProvider } from "@/context/TestResultContext";
@@ -55,8 +54,6 @@ export default function DashboardPage() {
                         <LearningRecommendations />
                     </div>
                 </div>
-
-                <DiagnosticReport />
 
                 <Card>
                     <CardHeader>
