@@ -1,5 +1,4 @@
 
-
 "use client";
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarSeparator } from "@/components/ui/sidebar";
@@ -163,7 +162,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
-                 <h1 className="text-xl font-semibold hidden sm:block">Home</h1>
+            </div>
+             <div className="flex items-center gap-2 font-bold text-lg">
+                <LumioLogo />
+                <span>Lumio</span>
             </div>
             <div className="flex items-center gap-4">
                 {/* Future icons can go here */}
