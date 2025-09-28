@@ -180,7 +180,7 @@ export default function ProfilePage() {
 
 
     return (
-        <div className="space-y-6">
+        <div className="mx-auto w-full max-w-4xl space-y-6">
              {imageToCrop && (
                 <Dialog open={!!imageToCrop} onOpenChange={(open) => !open && setImageToCrop(null)}>
                     <DialogContent className="max-w-md">

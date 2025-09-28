@@ -39,7 +39,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   };
 
   if (!isClient) {
-    return null; // or a loading skeleton
+    return (
+        <div className="flex min-h-screen">
+          <div className="hidden md:block w-64" />
+           <div className="flex-1">
+             <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6"/>
+             <main className="flex-1 p-4 sm:p-6">
+             </main>
+           </div>
+        </div>
+    );
   }
 
   const user = {
@@ -148,9 +157,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
           <main className="flex-1 p-4 sm:p-6">
-            <div className="mx-auto w-full max-w-4xl space-y-6">
               {children}
-            </div>
           </main>
         </SidebarInset>
       </div>
