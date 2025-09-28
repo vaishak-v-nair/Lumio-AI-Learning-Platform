@@ -235,7 +235,7 @@ export default function TestClient({ testId }: { testId: string }) {
                         {testData.questions.map((q, index) => (
                             <div key={index} className="flex items-center justify-between p-2 border-b">
                                 <p className="flex-1 pr-4">{index + 1}. {q.questionText}</p>
-                                {userAnswers[index] === q.correctAnswerIndex ? <CheckCircle className="text-green-500"/> : <XCircle className="text-destructive"/>}
+                                {scores[index] > 70 ? <CheckCircle className="text-green-500"/> : <XCircle className="text-destructive"/>}
                             </div>
                         ))}
                     </div>
