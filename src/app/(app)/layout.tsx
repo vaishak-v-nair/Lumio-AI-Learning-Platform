@@ -1,4 +1,5 @@
 
+
 "use client";
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -36,6 +37,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     localStorage.removeItem('userAvatar');
     localStorage.removeItem('lastTestResultId');
     localStorage.removeItem('lastTestResult');
+    localStorage.removeItem('onboardingComplete');
   };
 
   if (!isClient) {
@@ -157,7 +159,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </div>
           </header>
           <main className="flex-1 p-4 sm:p-6">
-              {children}
+              <div className="mx-auto w-full max-w-6xl">
+                {children}
+              </div>
           </main>
         </SidebarInset>
       </div>

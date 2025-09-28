@@ -7,11 +7,13 @@ import DiagnosticReport from "@/components/dashboard/DiagnosticReport";
 import Achievements from "@/components/dashboard/Achievements";
 import LearningRecommendations from "@/components/dashboard/LearningRecommendations";
 import { TestResultProvider } from "@/context/TestResultContext";
+import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
 export default function DashboardPage() {
     return (
         <TestResultProvider>
-            <div className="mx-auto w-full max-w-4xl space-y-6">
+            <OnboardingTour />
+            <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
@@ -20,7 +22,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <Card className="lg:col-span-1 flex flex-col">
+                    <Card id="start-test-step" className="lg:col-span-1 flex flex-col">
                         <CardHeader className="pb-4">
                             <CardTitle>Start a New Test</CardTitle>
                             <CardDescription>Take a test tailored to your weak areas.</CardDescription>
@@ -40,14 +42,18 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    <div className="lg:col-span-2">
+                    <div id="progress-overview-step" className="lg:col-span-2">
                         <ProgressOverview />
                     </div>
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-2">
-                    <Achievements />
-                    <LearningRecommendations />
+                    <div id="achievements-step">
+                      <Achievements />
+                    </div>
+                    <div id="recommendations-step">
+                      <LearningRecommendations />
+                    </div>
                 </div>
 
                 <DiagnosticReport />
