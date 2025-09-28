@@ -17,6 +17,7 @@ import TestFeedback from './TestFeedback';
 import { saveTestResult } from '@/lib/firestore';
 import { dynamicallyScoreQuestion } from '@/ai/flows/dynamically-score-questions';
 import { refineTestDifficulty } from '@/ai/flows/refine-test-difficulty';
+import { explainAnswer } from '@/ai/flows/explain-answer';
 
 const FAST_ANSWER_THRESHOLD = 5; // seconds
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
@@ -33,7 +34,7 @@ export default function TestClient({ testId }: { testId: string }) {
     const [isLoading, setIsLoading] = useState(true);
     const [startTime, setStartTime] = useState(0);
     const [showHint, setShowHint] = useState(false);
-    const [feedback, setFeedback] = useState<{ message: string; correct: boolean } | null>(null);
+    const [feedback, setFeedback] = useState<{ message: string; correct: boolean, explanation?: string } | null>(null);
     const [isClient, setIsClient] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -118,16 +119,29 @@ export default function TestClient({ testId }: { testId: string }) {
         const expectedAnswerText = currentQuestion.options[currentQuestion.correctAnswerIndex];
 
         try {
-            const scoringResult = await dynamicallyScoreQuestion({
-                question: currentQuestion.questionText,
-                expectedAnswer: expectedAnswerText,
-                userAnswer: userAnswerText,
-                topic: currentQuestion.category,
-                difficulty: currentQuestion.difficulty,
-            });
+            // Run scoring and explanation in parallel
+            const [scoringResult, explanationResult] = await Promise.all([
+                dynamicallyScoreQuestion({
+                    question: currentQuestion.questionText,
+                    expectedAnswer: expectedAnswerText,
+                    userAnswer: userAnswerText,
+                    topic: currentQuestion.category,
+                    difficulty: currentQuestion.difficulty,
+                }),
+                explainAnswer({
+                    question: currentQuestion.questionText,
+                    userAnswer: userAnswerText,
+                    correctAnswer: expectedAnswerText,
+                    explanation: currentQuestion.explanation,
+                })
+            ]);
             
             const isCorrect = scoringResult.score > 70;
-            setFeedback({ message: scoringResult.feedback, correct: isCorrect });
+            setFeedback({ 
+                message: scoringResult.feedback, 
+                correct: isCorrect, 
+                explanation: explanationResult.explanation 
+            });
             
             const updatedScores = [...scores];
             updatedScores[currentQuestionIndex] = scoringResult.score;
@@ -136,9 +150,13 @@ export default function TestClient({ testId }: { testId: string }) {
             await adjustDifficulty(currentQuestion, isCorrect, timeTaken);
 
         } catch (error) {
-            console.error("Error scoring question:", error);
+            console.error("Error scoring or explaining question:", error);
             const isCorrect = selectedAnswer === currentQuestion.correctAnswerIndex;
-            setFeedback({ message: isCorrect ? 'Correct!' : `The correct answer was: ${expectedAnswerText}`, correct: isCorrect });
+            setFeedback({ 
+                message: isCorrect ? 'Correct!' : `The correct answer was: ${expectedAnswerText}`, 
+                correct: isCorrect,
+                explanation: currentQuestion.explanation // Fallback to basic explanation
+            });
             
             const updatedScores = [...scores];
             updatedScores[currentQuestionIndex] = isCorrect ? 100 : 0;
@@ -268,7 +286,7 @@ export default function TestClient({ testId }: { testId: string }) {
                 <p className="text-lg font-semibold">{currentQuestion.questionText}</p>
                 
                 {feedback ? (
-                    <TestFeedback correct={feedback.correct} message={feedback.message} />
+                    <TestFeedback correct={feedback.correct} message={feedback.message} explanation={feedback.explanation} />
                 ) : showHint ? (
                     <TestHint explanation={currentQuestion.explanation} />
                 ) : (
