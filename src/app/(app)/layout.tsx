@@ -71,6 +71,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarHeader>
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
               <LumioLogo />
+              <span className="group-data-[collapsible=icon]:hidden">Lumio</span>
             </Link>
           </SidebarHeader>
           <SidebarContent>
@@ -163,16 +164,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     <SidebarTrigger />
                 </div>
             </div>
-             <div className="flex items-center gap-2 font-bold text-lg">
-                <LumioLogo />
-                <span>Lumio</span>
-            </div>
             <div className="flex items-center gap-4">
                 {/* Future icons can go here */}
             </div>
           </header>
           <main className="flex-1">
-              <div className="mx-auto w-full max-w-4xl">
+              <div className="mx-auto w-full max-w-4xl p-4 sm:p-6">
                 {children}
               </div>
           </main>
