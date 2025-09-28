@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -30,7 +31,6 @@ export default function TestClient({ testId }: { testId: string }) {
     const [startTime, setStartTime] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [feedback, setFeedback] = useState<{ message: string; correct: boolean } | null>(null);
-    const [isSaving, setIsSaving] = useState(false);
     const [isClient, setIsClient] = useState(false);
 
     const router = useRouter();
@@ -150,8 +150,7 @@ export default function TestClient({ testId }: { testId: string }) {
         }
     };
 
-    const finishTest = async (finalAnswers: (number | null)[], finalTimings: number[]) => {
-        setIsSaving(true);
+    const finishTest = (finalAnswers: (number | null)[], finalTimings: number[]) => {
         let correctCount = 0;
         finalAnswers.forEach((answer, index) => {
             if (answer === testData!.questions[index].correctAnswerIndex) {
@@ -160,6 +159,7 @@ export default function TestClient({ testId }: { testId: string }) {
         });
         const finalScore = (correctCount / testData!.questions.length) * 100;
         setScore(finalScore);
+        setIsFinished(true);
 
         const userName = localStorage.getItem('userName') || 'guest';
 
@@ -173,22 +173,22 @@ export default function TestClient({ testId }: { testId: string }) {
             date: new Date().toISOString(),
             topic: 'time-and-distance'
         };
-
-        const docId = await saveTestResult(results);
-        if (docId) {
-            localStorage.setItem('lastTestResultId', docId);
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Save Failed',
-                description: 'Could not save your test results to the database. Your dashboard may not update.',
-            });
-        }
-        // Also save to local storage for immediate access by hooks without re-fetching
+        
+        // Save to local storage for immediate access by hooks without re-fetching
         localStorage.setItem('lastTestResult', JSON.stringify(results));
         
-        setIsFinished(true);
-        setIsSaving(false);
+        // Save to Firestore in the background
+        saveTestResult(results).then(docId => {
+            if (docId) {
+                localStorage.setItem('lastTestResultId', docId);
+            } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Save Failed',
+                    description: 'Could not save your test results to the database. Your dashboard may not update.',
+                });
+            }
+        });
     };
     
     if (isLoading || !isClient) {
@@ -228,16 +228,6 @@ export default function TestClient({ testId }: { testId: string }) {
         );
     }
 
-    if (isSaving) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">Saving Your Results</h2>
-                <p className="text-muted-foreground">Please wait...</p>
-            </div>
-        );
-    }
-    
     const currentQuestion = testData.questions[currentQuestionIndex];
     const progressValue = ((currentQuestionIndex + 1) / testData.questions.length) * 100;
 
@@ -287,3 +277,5 @@ export default function TestClient({ testId }: { testId: string }) {
         </Card>
     );
 }
+
+    
