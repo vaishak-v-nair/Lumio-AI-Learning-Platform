@@ -3,7 +3,7 @@
 "use client";
 import type { ReactNode } from "react";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarSeparator } from "@/components/ui/sidebar";
-import { LayoutDashboard, LogOut, GraduationCap, User, BarChart, Trophy, Settings, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, GraduationCap, User, Trophy, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -72,7 +72,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <SidebarHeader>
             <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
               <LumioLogo />
-              <span className="group-data-[collapsible=icon]:hidden">Lumio</span>
             </Link>
           </SidebarHeader>
           <SidebarContent>
@@ -93,6 +92,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Profile" isActive={isActive('/profile')}>
+                     <Link href="/profile">
+                        <User />
+                        <span>Profile</span>
+                     </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Settings" isActive={isActive('/settings')}>
+                     <Link href="/settings">
+                        <Settings/>
+                        <span>Settings</span>
+                     </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
             </SidebarMenu>
 
             <SidebarGroup>
@@ -121,7 +136,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={cn(
-                    "flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none transition-colors",
+                    "flex w-full items-center gap-2 overflow-hidden rounded-full p-2 text-left text-sm outline-none transition-colors",
                     "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
                   )}>
                      <Avatar className="h-8 w-8">
@@ -134,19 +149,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <DropdownMenuContent align="end" className="w-56" side="right" sideOffset={8}>
                   <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                     <Link href="/profile">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                     <Link href="/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
-                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
@@ -156,24 +158,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
            </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 backdrop-blur-sm px-4 sm:px-6">
             <div className="flex items-center gap-4">
                 <div className="md:hidden">
                     <SidebarTrigger />
                 </div>
-            </div>
-            <div className="absolute left-1/2 -translate-x-1/2">
-                <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
-                    <LumioLogo />
-                    <span className="hidden sm:inline-block">Lumio</span>
-                </Link>
+                 <h1 className="text-xl font-semibold hidden sm:block">Home</h1>
             </div>
             <div className="flex items-center gap-4">
                 {/* Future icons can go here */}
             </div>
           </header>
-          <main className="flex-1 p-4 sm:p-6">
-              <div className="mx-auto w-full max-w-6xl">
+          <main className="flex-1">
+              <div className="mx-auto w-full max-w-4xl">
                 {children}
               </div>
           </main>
