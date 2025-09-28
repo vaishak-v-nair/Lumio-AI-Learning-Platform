@@ -8,9 +8,15 @@ import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { Award, BookOpen, Clock, Target } from "lucide-react";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ProfilePage() {
     const [userName, setUserName] = useState("Guest");
+    const [bio, setBio] = useState("This is a placeholder bio. You can edit it by clicking the button below!");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -18,12 +24,15 @@ export default function ProfilePage() {
             if (storedName) {
                 setUserName(storedName);
             }
+            const storedBio = localStorage.getItem('userBio');
+            if (storedBio) {
+                setBio(storedBio);
+            }
         }
     }, []);
 
     const user = {
         name: userName,
-        email: `${userName.toLowerCase()}@example.com`,
         avatar: `https://picsum.photos/seed/${userName}/128/128`,
         memberSince: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     };
@@ -34,6 +43,22 @@ export default function ProfilePage() {
         { label: "Total Achievements", value: "3", icon: <Award className="h-6 w-6 text-amber-500" /> },
         { label: "Avg. Time / Question", value: "45s", icon: <Clock className="h-6 w-6 text-blue-500" /> },
     ];
+    
+    const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const newName = e.currentTarget.username.value;
+        const newBio = e.currentTarget.bio.value;
+        
+        setUserName(newName);
+        setBio(newBio);
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('userName', newName);
+            localStorage.setItem('userBio', newBio);
+        }
+        
+        setIsDialogOpen(false);
+    };
 
     return (
         <div className="space-y-6">
@@ -50,9 +75,36 @@ export default function ProfilePage() {
                     </Avatar>
                     <div className="flex-1 text-center sm:text-left">
                         <h2 className="text-2xl font-semibold">{user.name}</h2>
-                        <p className="text-muted-foreground">{user.email}</p>
+                        <p className="text-muted-foreground italic mt-2">"{bio}"</p>
                         <p className="text-sm text-muted-foreground mt-2">Member since {user.memberSince}</p>
-                        <Button variant="outline" className="mt-4">Edit Profile</Button>
+
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="mt-4">Edit Profile</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Edit Profile</DialogTitle>
+                                    <DialogDescription>
+                                        Make changes to your profile here. Click save when you're done.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <form onSubmit={handleSaveChanges} className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="username">Username</Label>
+                                        <Input id="username" defaultValue={userName} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bio">Bio</Label>
+                                        <Textarea id="bio" defaultValue={bio} />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit">Save changes</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+
                     </div>
                 </CardContent>
             </Card>
