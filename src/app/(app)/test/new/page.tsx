@@ -1,3 +1,4 @@
+
 'use client';
 
 import { generateQuestionsFromTopicData } from '@/ai/flows/generate-questions-from-topic-data';
@@ -50,7 +51,7 @@ export default function NewTestPage() {
     }, [router, toast]);
     
     return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] w-full">
             <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
             <h2 className="text-2xl font-semibold mb-2">Building Your Test</h2>
             <p className="text-muted-foreground">{status}</p>
