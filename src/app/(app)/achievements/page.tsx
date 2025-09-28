@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Medal, Star, Zap, Trophy, Lock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { getLatestTestResult } from "@/lib/firestore";
-import type { TestResult } from "@/lib/firestore";
+import { useTestResult } from "@/context/TestResultContext";
 
 type Achievement = {
     id: string;
@@ -24,41 +23,34 @@ const allAchievements: Achievement[] = [
 ];
 
 export default function AchievementsPage() {
-    const [isLoading, setIsLoading] = useState(true);
+    const { latestResult: results, isLoading } = useTestResult();
     const [earnedAchievements, setEarnedAchievements] = useState<Set<string>>(new Set());
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
         setIsClient(true);
-        const fetchAchievements = async () => {
-            setIsLoading(true);
-            const userName = localStorage.getItem('userName') || 'guest';
-            const results = await getLatestTestResult(userName, 'time-and-distance');
-            const earned = new Set<string>();
+    }, []);
 
-            if (results) {
-                earned.add('first_test');
-                
-                if (results.score >= 90) {
-                    earned.add('mastered_topic');
-                }
-                
-                const allFast = results.timings.every((t: number) => t < 30);
-                if (allFast) {
-                    earned.add('quick_thinker');
-                }
+    useEffect(() => {
+        if (results) {
+            const earned = new Set<string>();
+            earned.add('first_test');
+            
+            if (results.score >= 90) {
+                earned.add('mastered_topic');
             }
             
-            // Mock a streak for demo purposes
-            if (results) {
-              earned.add('streak_5');
+            const allFast = results.timings.every((t: number) => t < 30);
+            if (allFast) {
+                earned.add('quick_thinker');
             }
+            
+            // Mock a streak for demo purposes as it requires historical data
+            earned.add('streak_5');
 
             setEarnedAchievements(earned);
-            setIsLoading(false);
         }
-        fetchAchievements();
-    }, []);
+    }, [results]);
 
     const renderSkeletons = () => (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

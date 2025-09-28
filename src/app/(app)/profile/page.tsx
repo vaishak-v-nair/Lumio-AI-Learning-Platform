@@ -16,6 +16,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import ImageCropper, { type Area } from "@/components/ImageCropper";
 import { getCroppedImg } from "@/lib/canvas-utils";
+import { useTestResult } from "@/context/TestResultContext";
+
+type Stat = {
+    label: string;
+    value: string;
+    icon: React.ReactNode;
+};
 
 export default function ProfilePage() {
     const [userName, setUserName] = useState("Guest");
@@ -25,12 +32,14 @@ export default function ProfilePage() {
     const [isCaptureDialogOpen, setIsCaptureDialogOpen] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [memberSince, setMemberSince] = useState('');
-
+    const [stats, setStats] = useState<Stat[]>([]);
 
     const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const { toast } = useToast();
+    const { latestResult: results, isLoading } = useTestResult();
+
 
     // Image Cropping state
     const [imageToCrop, setImageToCrop] = useState<string | null>(null);
@@ -58,17 +67,39 @@ export default function ProfilePage() {
         setMemberSince(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     }, []);
 
+    useEffect(() => {
+        if (results) {
+            const averageScore = Math.round(results.score);
+            const avgTime = Math.round(results.timings.reduce((a, b) => a + b, 0) / results.timings.length);
+            
+            const earnedAchievements = [];
+            if (results.score >= 90) earnedAchievements.push('mastered_topic');
+            const allFast = results.timings.every((t: number) => t < 30);
+            if (allFast) earnedAchievements.push('quick_thinker');
+            earnedAchievements.push('streak_5'); // Mocked
+            earnedAchievements.push('first_test');
+
+            setStats([
+                { label: "Tests Completed", value: "1", icon: <BookOpen className="h-6 w-6 text-primary" /> },
+                { label: "Average Score", value: `${averageScore}%`, icon: <Target className="h-6 w-6 text-green-500" /> },
+                { label: "Total Achievements", value: `${earnedAchievements.length}`, icon: <Award className="h-6 w-6 text-amber-500" /> },
+                { label: "Avg. Time / Question", value: `${avgTime}s`, icon: <Clock className="h-6 w-6 text-blue-500" /> },
+            ]);
+        } else {
+             setStats([
+                { label: "Tests Completed", value: "0", icon: <BookOpen className="h-6 w-6 text-primary" /> },
+                { label: "Average Score", value: "N/A", icon: <Target className="h-6 w-6 text-green-500" /> },
+                { label: "Total Achievements", value: "0", icon: <Award className="h-6 w-6 text-amber-500" /> },
+                { label: "Avg. Time / Question", value: "N/A", icon: <Clock className="h-6 w-6 text-blue-500" /> },
+            ]);
+        }
+    }, [results]);
+
     const user = {
         name: userName,
         memberSince: memberSince
     };
 
-    const stats = [
-        { label: "Tests Completed", value: "1", icon: <BookOpen className="h-6 w-6 text-primary" /> },
-        { label: "Average Score", value: "85%", icon: <Target className="h-6 w-6 text-green-500" /> },
-        { label: "Total Achievements", value: "3", icon: <Award className="h-6 w-6 text-amber-500" /> },
-        { label: "Avg. Time / Question", value: "45s", icon: <Clock className="h-6 w-6 text-blue-500" /> },
-    ];
     
     const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -337,5 +368,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    

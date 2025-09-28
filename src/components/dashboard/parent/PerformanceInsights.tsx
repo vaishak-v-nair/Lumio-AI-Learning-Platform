@@ -7,7 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { GraduationCap, Sparkles } from "lucide-react";
 
 export default function PerformanceInsights() {
-    const { insights, isLoading, hasData } = useParentData();
+    const { insights, isLoading, hasData, userName } = useParentData();
 
     if (isLoading) {
         return (
@@ -29,7 +29,7 @@ export default function PerformanceInsights() {
                 <GraduationCap className="h-4 w-4" />
                 <AlertTitle>No Performance Insights Available</AlertTitle>
                 <AlertDescription>
-                    There are no performance insights for your child yet.
+                    There are no performance insights for {userName} yet.
                 </AlertDescription>
             </Alert>
         );
@@ -38,7 +38,7 @@ export default function PerformanceInsights() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Your Child's Performance</CardTitle>
+                <CardTitle>{userName}'s Performance</CardTitle>
                 <CardDescription>AI-powered insights and recommendations for your child's learning.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -46,7 +46,7 @@ export default function PerformanceInsights() {
                     <Sparkles className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                     <div>
                          <h4 className="font-semibold">Personalized Recommendation</h4>
-                         <p className="text-muted-foreground">{insights}</p>
+                         <p className="text-muted-foreground">{insights.replace("Your child", userName)}</p>
                     </div>
                 </div>
             </CardContent>

@@ -1,63 +1,54 @@
 import { useState, useEffect } from 'react';
 import { useTestResult } from '@/context/TestResultContext';
+import type { Question } from '@/ai/flows/generate-personalized-test';
+
+type ProgressItem = {
+    title: string;
+    value: number;
+}
 
 export function useUserProgress() {
-  const [progressData, setProgressData] = useState<any[]>([]);
-  const [learningTrends, setLearningTrends] = useState<any[]>([]);
-  const [trending, setTrending] = useState(0);
+  const [progressData, setProgressData] = useState<ProgressItem[]>([]);
   const { latestResult: results, isLoading } = useTestResult();
 
   useEffect(() => {
     if (results) {
         const categoryData: { [key: string]: { corrects: number[], count: number } } = {};
 
-        results.questions.forEach((q: any, index: number) => {
-            if (!categoryData[q.category]) {
-                categoryData[q.category] = { corrects: [], count: 0 };
+        results.questions.forEach((q: Question, index: number) => {
+            const category = q.category || "General";
+            if (!categoryData[category]) {
+                categoryData[category] = { corrects: [], count: 0 };
             }
-            categoryData[q.category].count++;
+            categoryData[category].count++;
             if (results.answers[index] === q.correctAnswerIndex) {
-                categoryData[q.category].corrects.push(1);
+                categoryData[category].corrects.push(1);
             }
         });
 
+        const allCategories = ["Grasping", "Retention", "Application"];
+        allCategories.forEach(cat => {
+            if (!categoryData[cat]) {
+                categoryData[cat] = { corrects: [], count: 0 };
+            }
+        });
+
+
         const newProgressData = Object.keys(categoryData).map(category => ({
             title: category,
-            value: (categoryData[category].corrects.length / categoryData[category].count) * 100,
+            value: categoryData[category].count > 0 ? (categoryData[category].corrects.length / categoryData[category].count) * 100 : 0,
         }));
         setProgressData(newProgressData);
 
-        // Mock historical data for the last 6 months
-        const trends = [];
-        const months = ['January', 'February', 'March', 'April', 'May', 'June'];
-        const baseScores = {
-          listening: 40,
-          grasping: 30,
-          retention: 25,
-          application: 20
-        };
-        
-        for(let i = 0; i < months.length; i++) {
-            const monthData: any = { month: months[i] };
-            for (const category in baseScores) {
-                const baseScore = baseScores[category as keyof typeof baseScores];
-                // Create a steady, genuine-looking increase over the months
-                const score = baseScore + (i * 7) + (Math.random() * 10);
-                monthData[category] = Math.min(100, score);
-            }
-            trends.push(monthData);
-        }
-
-        setLearningTrends(trends);
-        
-        setTrending(12);
-
     } else {
-        setProgressData([]);
-        setLearningTrends([]);
-        setTrending(0);
+        // Provide a default or empty state when no results are available
+        setProgressData([
+            { title: "Grasping", value: 0 },
+            { title: "Retention", value: 0 },
+            { title: "Application", value: 0 },
+        ]);
     }
   }, [results]);
 
-  return { progressData, learningTrends, trending, isLoading };
+  return { progressData, isLoading };
 }
