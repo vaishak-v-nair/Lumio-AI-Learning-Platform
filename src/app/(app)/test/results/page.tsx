@@ -22,15 +22,19 @@ const achievementIcons: { [key: string]: React.ReactNode } = {
 export default function TestResultsPage() {
     const router = useRouter();
     const { result, isLoading: isResultLoading } = useTestResultData();
-    const { isLoading: isContextLoading } = useTestResult(); // To trigger re-render of recommendations
+    const { isLoading: isContextLoading, refreshResult } = useTestResult(); // To trigger re-render of recommendations
 
     useEffect(() => {
         if (!isResultLoading && !result) {
             router.push('/dashboard');
         }
-    }, [result, isResultLoading, router]);
+        // When this page loads, we have new results, so we should refresh the context.
+        if (result) {
+            refreshResult();
+        }
+    }, [result, isResultLoading, router, refreshResult]);
 
-    if (isResultLoading || !result) {
+    if (isResultLoading || !result || isContextLoading) {
         return (
             <div className="flex justify-center items-center h-full w-full">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />

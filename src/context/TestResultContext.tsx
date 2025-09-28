@@ -24,11 +24,18 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
     const localResult = localStorage.getItem('lastTestResult');
     if (localResult) {
         setLatestResult(JSON.parse(localResult));
-    } else {
-        // Fallback to Firestore for dashboard loading
-        const result = await getLatestTestResult(userName, 'time-and-distance');
-        setLatestResult(result);
+        setIsLoading(false);
+        return; // Exit early if we have local storage data
+    } 
+    
+    // Fallback to Firestore for dashboard loading
+    const result = await getLatestTestResult(userName, 'time-and-distance');
+    setLatestResult(result);
+    if (result) {
+        // Also update local storage if we fetched from firestore
+        localStorage.setItem('lastTestResult', JSON.stringify(result));
     }
+    
     setIsLoading(false);
   }, []);
 

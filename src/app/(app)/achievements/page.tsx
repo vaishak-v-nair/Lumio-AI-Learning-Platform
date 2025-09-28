@@ -40,7 +40,7 @@ export default function AchievementsPage() {
                 earned.add('mastered_topic');
             }
             
-            const allFast = results.timings.every((t: number) => t < 30);
+            const allFast = results.timings && results.timings.every((t: number) => t < 30);
             if (allFast) {
                 earned.add('quick_thinker');
             }
@@ -63,8 +63,10 @@ export default function AchievementsPage() {
     if (!isClient) {
         return (
              <div className="mx-auto w-full max-w-4xl space-y-6">
-                <h1 className="text-3xl font-bold font-headline">My Achievements</h1>
-                <p className="text-muted-foreground">Here are all the badges you can earn. Keep learning!</p>
+                <div>
+                  <h1 className="text-3xl font-bold font-headline">My Achievements</h1>
+                  <p className="text-muted-foreground">Here are all the badges you can earn. Keep learning!</p>
+                </div>
                 {renderSkeletons()}
             </div>
         )
