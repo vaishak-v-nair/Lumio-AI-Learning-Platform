@@ -70,38 +70,6 @@ export default function TestClient({ testId }: { testId: string }) {
         setFeedback(null);
     }, [currentQuestionIndex, isClient]);
 
-    const adjustDifficulty = async (question: Question, correct: boolean, timeTaken: number) => {
-        try {
-            const { newDifficulty, reasoning } = await refineTestDifficulty({
-                questionId: `${testId}-${currentQuestionIndex}`,
-                successRate: correct ? 1 : 0, // Simplified for single answer
-                currentDifficulty: question.difficulty === 'easy' ? 1 : question.difficulty === 'medium' ? 2 : 3,
-            });
-
-            const newDifficultyString: 'easy' | 'medium' | 'hard' = newDifficulty <= 1 ? 'easy' : newDifficulty <= 2 ? 'medium' : 'hard';
-
-            if (testData) {
-                const newQuestions = [...testData.questions];
-                newQuestions[currentQuestionIndex].difficulty = newDifficultyString;
-                setTestData({ ...testData, questions: newQuestions });
-            }
-
-            console.log(`Difficulty Adjustment: ${reasoning}. New level: ${newDifficultyString}`);
-
-            if (!correct && timeTaken > SLOW_ANSWER_THRESHOLD) {
-                setShowHint(true);
-            }
-
-        } catch (error) {
-            console.error("Error refining difficulty:", error);
-            // Fallback to original logic if AI fails
-            if (!correct && timeTaken > SLOW_ANSWER_THRESHOLD) {
-                setShowHint(true);
-            }
-        }
-    };
-
-
     const handleAnswerSubmit = async () => {
         if (selectedAnswer === null) {
             toast({
@@ -117,10 +85,10 @@ export default function TestClient({ testId }: { testId: string }) {
         const currentQuestion = testData!.questions[currentQuestionIndex];
         const userAnswerText = currentQuestion.options[selectedAnswer];
         const expectedAnswerText = currentQuestion.options[currentQuestion.correctAnswerIndex];
+        const isCorrectManual = selectedAnswer === currentQuestion.correctAnswerIndex;
 
         try {
-            // Run scoring and explanation in parallel
-            const [scoringResult, explanationResult] = await Promise.all([
+            const [scoringResult, explanationResult, difficultyResult] = await Promise.all([
                 dynamicallyScoreQuestion({
                     question: currentQuestion.questionText,
                     expectedAnswer: expectedAnswerText,
@@ -133,10 +101,17 @@ export default function TestClient({ testId }: { testId: string }) {
                     userAnswer: userAnswerText,
                     correctAnswer: expectedAnswerText,
                     explanation: currentQuestion.explanation,
+                }),
+                refineTestDifficulty({
+                    questionId: `${testId}-${currentQuestionIndex}`,
+                    successRate: isCorrectManual ? 1 : 0, // Use manual check for immediate feedback
+                    currentDifficulty: currentQuestion.difficulty === 'easy' ? 1 : currentQuestion.difficulty === 'medium' ? 2 : 3,
                 })
             ]);
-            
+
             const isCorrect = scoringResult.score > 70;
+            
+            // Set feedback and score from the results
             setFeedback({ 
                 message: scoringResult.feedback, 
                 correct: isCorrect, 
@@ -147,24 +122,39 @@ export default function TestClient({ testId }: { testId: string }) {
             updatedScores[currentQuestionIndex] = scoringResult.score;
             setScores(updatedScores);
 
-            await adjustDifficulty(currentQuestion, isCorrect, timeTaken);
+            // Update difficulty in the background
+            if (testData) {
+                const newDifficultyString: 'easy' | 'medium' | 'hard' = difficultyResult.newDifficulty <= 1 ? 'easy' : difficultyResult.newDifficulty <= 2 ? 'medium' : 'hard';
+                const newQuestions = [...testData.questions];
+                newQuestions[currentQuestionIndex].difficulty = newDifficultyString;
+                setTestData({ ...testData, questions: newQuestions });
+                console.log(`Difficulty Adjustment: ${difficultyResult.reasoning}. New level: ${newDifficultyString}`);
+            }
+
+            // Decide whether to show a hint
+            if (!isCorrect && timeTaken > SLOW_ANSWER_THRESHOLD) {
+                setShowHint(true);
+            }
 
         } catch (error) {
-            console.error("Error scoring or explaining question:", error);
-            const isCorrect = selectedAnswer === currentQuestion.correctAnswerIndex;
+            console.error("Error during answer processing:", error);
+            // Fallback to simpler logic if any AI call fails
             setFeedback({ 
-                message: isCorrect ? 'Correct!' : `The correct answer was: ${expectedAnswerText}`, 
-                correct: isCorrect,
-                explanation: currentQuestion.explanation // Fallback to basic explanation
+                message: isCorrectManual ? 'Correct!' : `The correct answer was: ${expectedAnswerText}`, 
+                correct: isCorrectManual,
+                explanation: currentQuestion.explanation
             });
             
             const updatedScores = [...scores];
-            updatedScores[currentQuestionIndex] = isCorrect ? 100 : 0;
+            updatedScores[currentQuestionIndex] = isCorrectManual ? 100 : 0;
             setScores(updatedScores);
 
-            await adjustDifficulty(currentQuestion, isCorrect, timeTaken);
+            if (!isCorrectManual && timeTaken > SLOW_ANSWER_THRESHOLD) {
+                setShowHint(true);
+            }
         }
 
+        // Update user answers and timings
         const updatedAnswers = [...userAnswers];
         updatedAnswers[currentQuestionIndex] = selectedAnswer;
         setUserAnswers(updatedAnswers);
@@ -189,6 +179,7 @@ export default function TestClient({ testId }: { testId: string }) {
     const goToNextQuestion = () => {
         setFeedback(null);
         setSelectedAnswer(null);
+        setShowHint(false); // Make sure to reset hint state
 
         if (currentQuestionIndex < testData!.questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -303,7 +294,7 @@ export default function TestClient({ testId }: { testId: string }) {
             </CardContent>
             <CardFooter>
                 {feedback || showHint ? (
-                    <Button onClick={showHint ? goToNextQuestion : proceedToNextStep} className="ml-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button onClick={goToNextQuestion} className="ml-auto bg-accent text-accent-foreground hover:bg-accent/90">
                         Continue
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
@@ -317,3 +308,5 @@ export default function TestClient({ testId }: { testId: string }) {
         </Card>
     );
 }
+
+    
