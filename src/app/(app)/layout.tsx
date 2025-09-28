@@ -102,14 +102,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="Story Demo">
-                  <Link href="/story/sanga">
-                    <BarChart />
-                    <span>Story</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
