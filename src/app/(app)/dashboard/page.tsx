@@ -22,38 +22,41 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <Card id="start-test-step" className="flex flex-col">
-                            <CardHeader className="pb-4">
-                                <CardTitle>Start a New Test</CardTitle>
-                                <CardDescription>Take a test tailored to your weak areas.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="flex flex-col flex-1 items-center justify-center text-center p-6 pt-0">
-                                <div className="p-6 bg-accent/20 rounded-full mb-4">
-                                    <Rocket className="w-12 h-12 text-accent" />
-                                </div>
-                                <p className="mb-4 text-sm text-muted-foreground flex-1">
-                                    Our AI will generate a personalized test to help you focus on what matters most.
-                                </p>
-                                <Link href="/test/new" className="w-full mt-auto">
-                                    <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
-                                        Start Personalized Test
-                                    </Button>
-                                </Link>
-                            </CardContent>
-                        </Card>
-                        
-                        <div id="progress-overview-step" className="row-span-2 flex flex-col">
-                            <ProgressOverview />
-                        </div>
-                        
-                        <div id="achievements-step" className="md:col-start-1">
-                          <Achievements />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Main Action Card */}
+                    <Card id="start-test-step" className="lg:col-span-2 flex flex-col">
+                        <CardHeader className="pb-4">
+                            <CardTitle>Start a New Test</CardTitle>
+                            <CardDescription>Take a test tailored to your weak areas.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex flex-col flex-1 items-center justify-center text-center p-6 pt-0">
+                            <div className="p-6 bg-accent/20 rounded-full mb-4">
+                                <Rocket className="w-12 h-12 text-accent" />
+                            </div>
+                            <p className="mb-4 text-sm text-muted-foreground flex-1">
+                                Our AI will generate a personalized test to help you focus on what matters most.
+                            </p>
+                            <Link href="/test/new" className="w-full mt-auto">
+                                <Button className="w-full bg-accent text-accent-foreground hover:bg-accent/90">
+                                    Start Personalized Test
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
+                    {/* Progress Overview */}
+                    <div id="progress-overview-step" className="lg:row-span-2 flex flex-col">
+                      <ProgressOverview />
                     </div>
-                    <div id="recommendations-step" className="lg:col-span-1">
-                      <LearningRecommendations />
+
+                    {/* Achievements */}
+                    <div id="achievements-step">
+                        <Achievements />
+                    </div>
+
+                    {/* Recommendations */}
+                    <div id="recommendations-step">
+                        <LearningRecommendations />
                     </div>
                 </div>
 
