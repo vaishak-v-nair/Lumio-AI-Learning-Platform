@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -13,13 +14,13 @@ import {z} from 'genkit';
 
 const RefineTestDifficultyInputSchema = z.object({
   questionId: z.string().describe('The ID of the question to refine.'),
-  successRate: z.number().describe('The success rate for the question (0 to 1).'),
-  currentDifficulty: z.number().describe('The current difficulty level of the question.'),
+  successRate: z.number().describe('The success rate for the question (0 for incorrect, 1 for correct).'),
+  currentDifficulty: z.number().describe('The current difficulty level of the question (1=easy, 2=medium, 3=hard).'),
 });
 export type RefineTestDifficultyInput = z.infer<typeof RefineTestDifficultyInputSchema>;
 
 const RefineTestDifficultyOutputSchema = z.object({
-  newDifficulty: z.number().describe('The adjusted difficulty level of the question.'),
+  newDifficulty: z.number().describe('The adjusted difficulty level of the question (1-3).'),
   reasoning: z.string().describe('The AI reasoning behind the difficulty adjustment.'),
 });
 export type RefineTestDifficultyOutput = z.infer<typeof RefineTestDifficultyOutputSchema>;
@@ -34,17 +35,18 @@ const refineTestDifficultyPrompt = ai.definePrompt({
   output: {schema: RefineTestDifficultyOutputSchema},
   prompt: `You are an AI assistant that helps refine the difficulty of test questions based on student performance.
 
-  Analyze the provided question performance data and suggest a new difficulty level. Explain your reasoning for the adjustment.
+  Analyze the provided question performance data and suggest a new difficulty level (1 for easy, 2 for medium, 3 for hard). Explain your reasoning for the adjustment.
 
   Question ID: {{{questionId}}}
-  Current Success Rate: {{{successRate}}}
-  Current Difficulty: {{{currentDifficulty}}}
+  Success on last attempt: {{{successRate}}} (1 for correct, 0 for incorrect)
+  Current Difficulty: {{{currentDifficulty}}} (1=easy, 2=medium, 3=hard)
 
   Consider these guidelines:
-  - If the success rate is very high (e.g., > 0.8), increase the difficulty.
-  - If the success rate is very low (e.g., < 0.2), decrease the difficulty.
-  - Adjust the difficulty gradually to avoid drastic changes.
-  - Explain your reasoning for the adjustment.
+  - If the answer was correct (successRate=1), consider increasing the difficulty.
+  - If the answer was incorrect (successRate=0), consider decreasing the difficulty.
+  - Adjust the difficulty gradually (e.g., from 2 to 3, or 2 to 1). Don't make drastic jumps like 1 to 3.
+  - Provide a brief, one-sentence reasoning for the adjustment.
+  - The new difficulty must be an integer between 1 and 3.
 
   New Difficulty: 
   Reasoning: `,
@@ -64,13 +66,18 @@ const refineTestDifficultyFlow = ai.defineFlow(
         if (!output) {
           throw new Error("The AI model failed to produce a valid difficulty refinement.");
         }
+        // Clamp the difficulty to be within the 1-3 range
+        output.newDifficulty = Math.max(1, Math.min(3, Math.round(output.newDifficulty)));
         return output;
     } catch (error) {
         console.error("Error in refineTestDifficultyFlow:", error);
         // Fallback for when the AI service fails
+        const fallbackDifficulty = input.successRate === 1 
+            ? Math.min(3, input.currentDifficulty + 1)
+            : Math.max(1, input.currentDifficulty - 1);
         return {
-            newDifficulty: input.currentDifficulty,
-            reasoning: "Could not refine difficulty at this time. Using current difficulty.",
+            newDifficulty: fallbackDifficulty,
+            reasoning: "Could not refine difficulty via AI. Using standard adjustment.",
         };
     }
   }

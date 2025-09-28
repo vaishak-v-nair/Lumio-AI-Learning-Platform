@@ -15,6 +15,8 @@ import Image from 'next/image';
 import TestHint from './TestHint';
 import TestFeedback from './TestFeedback';
 import { saveTestResult } from '@/lib/firestore';
+import { dynamicallyScoreQuestion } from '@/ai/flows/dynamically-score-questions';
+import { refineTestDifficulty } from '@/ai/flows/refine-test-difficulty';
 
 const FAST_ANSWER_THRESHOLD = 5; // seconds
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
@@ -24,14 +26,16 @@ export default function TestClient({ testId }: { testId: string }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+    const [scores, setScores] = useState<number[]>([]);
     const [timings, setTimings] = useState<number[]>([]);
     const [isFinished, setIsFinished] = useState(false);
-    const [score, setScore] = useState(0);
+    const [finalScore, setFinalScore] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [startTime, setStartTime] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [feedback, setFeedback] = useState<{ message: string; correct: boolean } | null>(null);
     const [isClient, setIsClient] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const router = useRouter();
     const { toast } = useToast();
@@ -44,6 +48,7 @@ export default function TestClient({ testId }: { testId: string }) {
             const parsedData = JSON.parse(data);
             setTestData(parsedData);
             setUserAnswers(new Array(parsedData.questions.length).fill(null));
+            setScores(new Array(parsedData.questions.length).fill(0));
             setTimings(new Array(parsedData.questions.length).fill(0));
         } else {
             toast({
@@ -64,31 +69,39 @@ export default function TestClient({ testId }: { testId: string }) {
         setFeedback(null);
     }, [currentQuestionIndex, isClient]);
 
-    const adjustDifficulty = (question: Question, correct: boolean, timeTaken: number) => {
-        let difficulty = question.difficulty;
+    const adjustDifficulty = async (question: Question, correct: boolean, timeTaken: number) => {
+        try {
+            const { newDifficulty, reasoning } = await refineTestDifficulty({
+                questionId: `${testId}-${currentQuestionIndex}`,
+                successRate: correct ? 1 : 0, // Simplified for single answer
+                currentDifficulty: question.difficulty === 'easy' ? 1 : question.difficulty === 'medium' ? 2 : 3,
+            });
 
-        if (correct) {
-            if (timeTaken < FAST_ANSWER_THRESHOLD) {
-                // Correct and fast: significantly increase difficulty
-                difficulty = difficulty === 'easy' ? 'medium' : 'hard';
-            } else {
-                // Correct but slow: slight increase
-                difficulty = difficulty === 'hard' ? 'hard' : 'medium';
+            const newDifficultyString: 'easy' | 'medium' | 'hard' = newDifficulty <= 1 ? 'easy' : newDifficulty <= 2 ? 'medium' : 'hard';
+
+            if (testData) {
+                const newQuestions = [...testData.questions];
+                newQuestions[currentQuestionIndex].difficulty = newDifficultyString;
+                setTestData({ ...testData, questions: newQuestions });
             }
-        } else {
-            if (timeTaken < FAST_ANSWER_THRESHOLD) {
-                // Wrong and fast (guessing): slight adjustment
-                difficulty = difficulty === 'hard' ? 'medium' : 'easy';
-            } else {
-                // Wrong and slow (conceptual gap): show hint and decrease difficulty
+
+            console.log(`Difficulty Adjustment: ${reasoning}. New level: ${newDifficultyString}`);
+
+            if (!correct && timeTaken > SLOW_ANSWER_THRESHOLD) {
                 setShowHint(true);
-                difficulty = 'easy';
+            }
+
+        } catch (error) {
+            console.error("Error refining difficulty:", error);
+            // Fallback to original logic if AI fails
+            if (!correct && timeTaken > SLOW_ANSWER_THRESHOLD) {
+                setShowHint(true);
             }
         }
-        console.log(`Time: ${timeTaken.toFixed(1)}s, Correct: ${correct}, Old Difficulty: ${question.difficulty}, New Difficulty: ${difficulty}`);
     };
 
-    const handleAnswerSubmit = () => {
+
+    const handleAnswerSubmit = async () => {
         if (selectedAnswer === null) {
             toast({
                 variant: 'destructive',
@@ -98,12 +111,42 @@ export default function TestClient({ testId }: { testId: string }) {
             return;
         }
 
+        setIsSubmitting(true);
         const timeTaken = (Date.now() - startTime) / 1000;
         const currentQuestion = testData!.questions[currentQuestionIndex];
-        const isCorrect = selectedAnswer === currentQuestion.correctAnswerIndex;
+        const userAnswerText = currentQuestion.options[selectedAnswer];
+        const expectedAnswerText = currentQuestion.options[currentQuestion.correctAnswerIndex];
 
-        adjustDifficulty(currentQuestion, isCorrect, timeTaken);
-        
+        try {
+            const scoringResult = await dynamicallyScoreQuestion({
+                question: currentQuestion.questionText,
+                expectedAnswer: expectedAnswerText,
+                userAnswer: userAnswerText,
+                topic: currentQuestion.category,
+                difficulty: currentQuestion.difficulty,
+            });
+            
+            const isCorrect = scoringResult.score > 70;
+            setFeedback({ message: scoringResult.feedback, correct: isCorrect });
+            
+            const updatedScores = [...scores];
+            updatedScores[currentQuestionIndex] = scoringResult.score;
+            setScores(updatedScores);
+
+            await adjustDifficulty(currentQuestion, isCorrect, timeTaken);
+
+        } catch (error) {
+            console.error("Error scoring question:", error);
+            const isCorrect = selectedAnswer === currentQuestion.correctAnswerIndex;
+            setFeedback({ message: isCorrect ? 'Correct!' : `The correct answer was: ${expectedAnswerText}`, correct: isCorrect });
+            
+            const updatedScores = [...scores];
+            updatedScores[currentQuestionIndex] = isCorrect ? 100 : 0;
+            setScores(updatedScores);
+
+            await adjustDifficulty(currentQuestion, isCorrect, timeTaken);
+        }
+
         const updatedAnswers = [...userAnswers];
         updatedAnswers[currentQuestionIndex] = selectedAnswer;
         setUserAnswers(updatedAnswers);
@@ -112,21 +155,7 @@ export default function TestClient({ testId }: { testId: string }) {
         updatedTimings[currentQuestionIndex] = timeTaken;
         setTimings(updatedTimings);
 
-        let feedbackMessage = '';
-        if (isCorrect) {
-            if (timeTaken > SLOW_ANSWER_THRESHOLD) {
-                feedbackMessage = `Correct! But it took ${Math.round(timeTaken)}s. Try to answer similar problems faster.`;
-            } else {
-                feedbackMessage = `Correct! You answered in ${Math.round(timeTaken)}s.`;
-            }
-        } else {
-             if (timeTaken > SLOW_ANSWER_THRESHOLD) {
-                feedbackMessage = `Incorrect, you spent ${Math.round(timeTaken)}s. You may need to review the concept of ${currentQuestion.category}.`;
-            } else {
-                feedbackMessage = `Incorrect. You answered in ${Math.round(timeTaken)}s. Let's review the hint.`;
-            }
-        }
-        setFeedback({ message: feedbackMessage, correct: isCorrect });
+        setIsSubmitting(false);
     };
 
     const proceedToNextStep = () => {
@@ -146,26 +175,20 @@ export default function TestClient({ testId }: { testId: string }) {
         if (currentQuestionIndex < testData!.questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
-            finishTest(userAnswers, timings);
+            finishTest(userAnswers, timings, scores);
         }
     };
 
-    const finishTest = (finalAnswers: (number | null)[], finalTimings: number[]) => {
-        let correctCount = 0;
-        finalAnswers.forEach((answer, index) => {
-            if (answer === testData!.questions[index].correctAnswerIndex) {
-                correctCount++;
-            }
-        });
-        const finalScore = (correctCount / testData!.questions.length) * 100;
-        setScore(finalScore);
+    const finishTest = (finalAnswers: (number | null)[], finalTimings: number[], finalScores: number[]) => {
+        const averageScore = finalScores.reduce((a, b) => a + b, 0) / finalScores.length;
+        setFinalScore(averageScore);
         setIsFinished(true);
 
         const userName = localStorage.getItem('userName') || 'guest';
 
         const results = {
             userId: userName,
-            score: finalScore,
+            score: averageScore,
             answers: finalAnswers,
             timings: finalTimings,
             questions: testData!.questions,
@@ -174,10 +197,8 @@ export default function TestClient({ testId }: { testId: string }) {
             topic: 'time-and-distance'
         };
         
-        // Save to local storage for immediate access by hooks without re-fetching
         localStorage.setItem('lastTestResult', JSON.stringify(results));
         
-        // Save to Firestore in the background
         saveTestResult(results).then(docId => {
             if (docId) {
                 localStorage.setItem('lastTestResultId', docId);
@@ -208,7 +229,7 @@ export default function TestClient({ testId }: { testId: string }) {
                 <CardContent className="space-y-4">
                     {successImage && <Image src={successImage.imageUrl} alt={successImage.description} data-ai-hint={successImage.imageHint} width={400} height={300} className="mx-auto rounded-lg" />}
                     <p className="text-xl text-muted-foreground">Your Score:</p>
-                    <p className={`text-5xl font-bold ${score >= 70 ? 'text-green-500' : 'text-destructive'}`}>{Math.round(score)}%</p>
+                    <p className={`text-5xl font-bold ${finalScore >= 70 ? 'text-green-500' : 'text-destructive'}`}>{Math.round(finalScore)}%</p>
                     <div className="pt-4 text-left">
                         <h3 className="font-semibold text-lg mb-2">Review Your Answers</h3>
                         {testData.questions.map((q, index) => (
@@ -254,7 +275,7 @@ export default function TestClient({ testId }: { testId: string }) {
                     <RadioGroup value={selectedAnswer?.toString()} onValueChange={(value) => setSelectedAnswer(parseInt(value))}>
                         {currentQuestion.options.map((option, index) => (
                             <div key={index} className="flex items-center space-x-3 p-3 border rounded-md has-[:checked]:bg-accent/20 has-[:checked]:border-accent transition-colors duration-200">
-                                <RadioGroupItem value={index.toString()} id={`option-${index}`} disabled={feedback !== null} />
+                                <RadioGroupItem value={index.toString()} id={`option-${index}`} disabled={feedback !== null || isSubmitting} />
                                 <Label htmlFor={`option-${index}`} className="flex-1 cursor-pointer text-base">{option}</Label>
                             </div>
                         ))}
@@ -269,7 +290,8 @@ export default function TestClient({ testId }: { testId: string }) {
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 ) : (
-                    <Button onClick={handleAnswerSubmit} className="ml-auto bg-primary hover:bg-primary/90">
+                    <Button onClick={handleAnswerSubmit} disabled={isSubmitting} className="ml-auto bg-primary hover:bg-primary/90">
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Submit Answer
                     </Button>
                 )}
@@ -277,6 +299,3 @@ export default function TestClient({ testId }: { testId: string }) {
         </Card>
     );
 }
-
-    
-    
