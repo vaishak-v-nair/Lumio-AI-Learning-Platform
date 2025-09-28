@@ -35,20 +35,23 @@ export function useTeacherData() {
                         categories[q.category].push(results.timings[index]);
                      });
                      
+                     // Ensure all 4 categories are present, even if with no data
+                     const allCategories = ['Listening', 'Grasping', 'Retention', 'Application'];
+                     allCategories.forEach(cat => {
+                         if (!categories[cat]) {
+                             categories[cat] = [];
+                         }
+                     });
+
                      for (const category in categories) {
-                        const avgTime = categories[category].reduce((a, b) => a + b, 0) / categories[category].length;
-                        categoryData.push({ topic: category, time: Math.round(avgTime) });
+                        const times = categories[category];
+                        const avgTime = times.length > 0 ? Math.round(times.reduce((a, b) => a + b, 0) / times.length) : 0;
+                        categoryData.push({ topic: category, time: avgTime });
                      }
 
                      studentData.push({ student: 'Sanga', data: categoryData });
                 }
-
-                // Add some mock data for other students for visualization purposes
-                studentData.push({ student: 'Alex', data: [ { topic: 'Listening', time: 25 }, { topic: 'Grasping', time: 45 }, { topic: 'Retention', time: 60 }, { topic: 'Application', time: 80 } ] });
-                studentData.push({ student: 'Maria', data: [ { topic: 'Listening', time: 40 }, { topic: 'Grasping', time: 50 }, { topic: 'Retention', time: 55 }, { topic: 'Application', time: 65 } ] });
-                studentData.push({ student: 'Chen', data: [ { topic: 'Listening', time: 60 }, { topic: 'Grasping', time: 80 }, { topic: 'Retention', time: 100 }, { topic: 'Application', time: 130 } ] });
-
-
+                
                 setHeatmapData(studentData);
 
                 // Fetch AI-powered insights
