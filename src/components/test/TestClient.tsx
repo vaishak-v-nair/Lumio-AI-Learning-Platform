@@ -22,6 +22,7 @@ export default function TestClient({ testId }: { testId: string }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
+    const [timings, setTimings] = useState<number[]>([]);
     const [isFinished, setIsFinished] = useState(false);
     const [score, setScore] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +40,7 @@ export default function TestClient({ testId }: { testId: string }) {
             const parsedData = JSON.parse(data);
             setTestData(parsedData);
             setUserAnswers(new Array(parsedData.questions.length).fill(null));
+            setTimings(new Array(parsedData.questions.length).fill(0));
         } else {
             toast({
                 variant: 'destructive',
@@ -100,6 +102,10 @@ export default function TestClient({ testId }: { testId: string }) {
         updatedAnswers[currentQuestionIndex] = selectedAnswer;
         setUserAnswers(updatedAnswers);
 
+        const updatedTimings = [...timings];
+        updatedTimings[currentQuestionIndex] = timeTaken;
+        setTimings(updatedTimings);
+
         let feedbackMessage = '';
         if (isCorrect) {
             if (timeTaken > SLOW_ANSWER_THRESHOLD) {
@@ -134,19 +140,30 @@ export default function TestClient({ testId }: { testId: string }) {
         if (currentQuestionIndex < testData!.questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
-            finishTest(userAnswers);
+            finishTest(userAnswers, timings);
         }
     };
 
-    const finishTest = (finalAnswers: (number | null)[]) => {
+    const finishTest = (finalAnswers: (number | null)[], finalTimings: number[]) => {
         let correctCount = 0;
         finalAnswers.forEach((answer, index) => {
             if (answer === testData!.questions[index].correctAnswerIndex) {
                 correctCount++;
             }
         });
-        setScore((correctCount / testData!.questions.length) * 100);
+        const finalScore = (correctCount / testData!.questions.length) * 100;
+        setScore(finalScore);
         setIsFinished(true);
+
+        const results = {
+            score: finalScore,
+            answers: finalAnswers,
+            timings: finalTimings,
+            questions: testData!.questions,
+            testId,
+            date: new Date().toISOString(),
+        };
+        localStorage.setItem('testResults', JSON.stringify(results));
     };
     
     if (isLoading) {

@@ -17,10 +17,10 @@ export default function NewTestPage() {
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 setStatus('Identifying weak areas...');
-                const weakAreas = 'React Hooks, State Management';
+                const weakAreas = 'Listening, Grasping, Retention, Application';
                 await new Promise(resolve => setTimeout(resolve, 1500));
 
-                setStatus('Generating personalized questions...');
+                setStatus('Generating personalized questions for Time & Distance...');
                 const testData = await generatePersonalizedTest({
                     weakAreas,
                     numberOfQuestions: 5,

@@ -33,7 +33,7 @@ const QuestionSchema = z.object({
     .describe('The index of the correct answer in the options array.'),
   explanation: z.string().describe('Explanation of the correct answer.'),
   difficulty: z.enum(['easy', 'medium', 'hard']).describe('Difficulty level'),
-  category: z.string().describe('The category of the question'),
+  category: z.string().describe('The category of the question, should be one of "Listening", "Grasping", "Retention", or "Application"'),
 });
 
 const GeneratePersonalizedTestOutputSchema = z.object({
@@ -42,6 +42,7 @@ const GeneratePersonalizedTestOutputSchema = z.object({
 export type GeneratePersonalizedTestOutput = z.infer<
   typeof GeneratePersonalizedTestOutputSchema
 >;
+export type Question = z.infer<typeof QuestionSchema>;
 
 export async function generatePersonalizedTest(
   input: GeneratePersonalizedTestInput
@@ -62,7 +63,8 @@ const prompt = ai.definePrompt({
   Include an explanation of the correct answer.
   Dynamically configure the scoring logic for each generated question.
   The difficulty level should be adjusted according to the weak area, such as "easy", "medium", or "hard".
-  The category should match the weak area.
+  The category should match the weak area and be one of "Listening", "Grasping", "Retention", or "Application".
+  For the "Time & Distance" topic, create questions for each of these categories.
   Output ONLY valid JSON. DO NOT include any other text.`,
 });
 

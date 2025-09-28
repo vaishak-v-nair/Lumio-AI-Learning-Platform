@@ -9,6 +9,20 @@ type PerformanceDataItem = {
   icon: string;
 };
 
+const getAssessment = (accuracy: number, time: number) => {
+    if (accuracy >= 80) return "Good";
+    if (accuracy >= 60) return "Needs focus";
+    if (accuracy < 50 && time > 60) return "Weak (slow & inaccurate)";
+    if (accuracy < 50) return "Very Weak";
+    return "Needs focus";
+}
+
+const getIcon = (accuracy: number) => {
+    if (accuracy >= 80) return "✅";
+    if (accuracy >= 60) return "⚠️";
+    return "❌";
+}
+
 export function useDetailedDiagnostics() {
   const [performanceData, setPerformanceData] = useState<PerformanceDataItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,11 +32,40 @@ export function useDetailedDiagnostics() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // No more mock data. Set to empty array to represent no data.
-      setPerformanceData([]);
+      const storedResults = localStorage.getItem('testResults');
+      if (storedResults && topic === 'time-and-distance') { // Only show data for the relevant topic
+          const results = JSON.parse(storedResults);
+          const categoryData: { [key: string]: { times: number[], corrects: number[] } } = {};
+
+          results.questions.forEach((q: any, index: number) => {
+              if (!categoryData[q.category]) {
+                  categoryData[q.category] = { times: [], corrects: [] };
+              }
+              categoryData[q.category].times.push(results.timings[index]);
+              categoryData[q.category].corrects.push(results.answers[index] === q.correctAnswerIndex ? 1 : 0);
+          });
+          
+          const data: PerformanceDataItem[] = Object.keys(categoryData).map(category => {
+              const times = categoryData[category].times;
+              const corrects = categoryData[category].corrects;
+              const accuracy = (corrects.reduce((a, b) => a + b, 0) / corrects.length) * 100;
+              const avgResponseTime = Math.round(times.reduce((a, b) => a + b, 0) / times.length);
+              
+              return {
+                  fundamental: category,
+                  accuracy: Math.round(accuracy),
+                  avgResponseTime: avgResponseTime,
+                  assessment: getAssessment(accuracy, avgResponseTime),
+                  icon: getIcon(accuracy),
+              };
+          });
+
+          setPerformanceData(data);
+      } else {
+          setPerformanceData([]);
+      }
       setIsLoading(false);
     };
 
