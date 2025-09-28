@@ -57,7 +57,21 @@ const refineTestDifficultyFlow = ai.defineFlow(
     outputSchema: RefineTestDifficultyOutputSchema,
   },
   async input => {
-    const {output} = await refineTestDifficultyPrompt(input);
-    return output!;
+    try {
+        const llmResponse = await refineTestDifficultyPrompt(input);
+        const output = llmResponse.output;
+
+        if (!output) {
+          throw new Error("The AI model failed to produce a valid difficulty refinement.");
+        }
+        return output;
+    } catch (error) {
+        console.error("Error in refineTestDifficultyFlow:", error);
+        // Fallback for when the AI service fails
+        return {
+            newDifficulty: input.currentDifficulty,
+            reasoning: "Could not refine difficulty at this time. Using current difficulty.",
+        };
+    }
   }
 );

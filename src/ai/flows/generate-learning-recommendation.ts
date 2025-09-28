@@ -63,7 +63,20 @@ const generateLearningRecommendationFlow = ai.defineFlow(
     outputSchema: LearningRecommendationOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+      const llmResponse = await prompt(input);
+      const output = llmResponse.output;
+
+      if (!output) {
+        throw new Error("The AI model failed to produce a valid recommendation.");
+      }
+      return output;
+    } catch (error) {
+      console.error("Error in generateLearningRecommendationFlow:", error);
+      // Fallback for when the AI service fails
+      return {
+        recommendation: "Could not generate a recommendation at this time. Please try again later.",
+      };
+    }
   }
 );
