@@ -4,15 +4,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
-
-const chartData = [
-  { month: "January", listening: 18, grasping: 25, retention: 22, application: 30 },
-  { month: "February", listening: 30, grasping: 35, retention: 28, application: 38 },
-  { month: "March", listening: 40, grasping: 50, retention: 35, application: 55 },
-  { month: "April", listening: 45, grasping: 60, retention: 40, application: 62 },
-  { month: "May", listening: 55, grasping: 70, retention: 58, application: 75 },
-  { month: "June", listening: 78, grasping: 92, retention: 65, application: 85 },
-];
+import { useUserProgress } from "@/hooks/use-user-progress";
 
 const chartConfig = {
   listening: { label: "Listening", color: "hsl(var(--chart-1))" },
@@ -22,6 +14,8 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 export default function DiagnosticReport() {
+    const { learningTrends: chartData, trending } = useUserProgress();
+    
     return (
         <Card>
             <CardHeader>
@@ -51,7 +45,7 @@ export default function DiagnosticReport() {
             </CardContent>
             <CardFooter className="flex-col items-start gap-2 text-sm">
                 <div className="flex gap-2 font-medium leading-none">
-                    Trending up by 5.2% this month <TrendingUp className="h-4 w-4" />
+                    Trending up by {trending}% this month <TrendingUp className="h-4 w-4" />
                 </div>
                 <div className="leading-none text-muted-foreground">
                     Showing total scores for the last 6 months

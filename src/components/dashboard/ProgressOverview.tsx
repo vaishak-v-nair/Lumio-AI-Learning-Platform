@@ -1,14 +1,12 @@
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useUserProgress } from "@/hooks/use-user-progress";
 
-const progressData = [
-    { title: "Listening", value: 78 },
-    { title: "Grasping", value: 92 },
-    { title: "Retention", value: 65 },
-    { title: "Application", value: 85 },
-];
 
 export default function ProgressOverview() {
+    const { progressData } = useUserProgress();
     return (
         <Card className="h-full">
             <CardHeader>
