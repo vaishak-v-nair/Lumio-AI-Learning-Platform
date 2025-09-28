@@ -156,11 +156,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
            </SidebarFooter>
         </Sidebar>
         <SidebarInset>
-          <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
-            <div className="md:hidden">
-              <SidebarTrigger />
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-4 sm:px-6">
+            <div className="flex items-center gap-4">
+                <div className="md:hidden">
+                    <SidebarTrigger />
+                </div>
             </div>
-            <div className="ml-auto" />
+            <div className="absolute left-1/2 -translate-x-1/2">
+                <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
+                    <LumioLogo />
+                    <span className="hidden sm:inline-block">Lumio</span>
+                </Link>
+            </div>
+            <div className="flex items-center gap-4">
+                {/* Future icons can go here */}
+            </div>
           </header>
           <main className="flex-1 p-4 sm:p-6">
               <div className="mx-auto w-full max-w-6xl">
