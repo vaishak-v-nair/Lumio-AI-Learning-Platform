@@ -7,19 +7,32 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Sparkles, Lightbulb } from "lucide-react";
 import { generateLearningRecommendation } from '@/ai/flows/generate-learning-recommendation';
 import type { LearningRecommendationOutput } from '@/ai/flows/generate-learning-recommendation';
+import { useUserProgress } from '@/hooks/use-user-progress';
 
 
 export default function LearningRecommendations() {
     const [recommendation, setRecommendation] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const { progressData, isLoading: isProgressLoading } = useUserProgress();
 
     useEffect(() => {
         const fetchRecommendation = async () => {
+            if (isProgressLoading || progressData.length === 0) {
+                if (!isProgressLoading) {
+                    setIsLoading(false);
+                }
+                return;
+            }
+
             setIsLoading(true);
+
+            // Find the area with the lowest score
+            const weakestArea = [...progressData].sort((a, b) => a.value - b.value)[0];
+
             try {
                 const result: LearningRecommendationOutput = await generateLearningRecommendation({
-                    studentId: 'student123',
-                    weakness: 'Retention',
+                    studentId: 'student123', // This would be dynamic in a real multi-user app
+                    weakness: weakestArea.title,
                     context: 'student'
                 });
                 setRecommendation(result.recommendation);
@@ -31,7 +44,7 @@ export default function LearningRecommendations() {
             }
         };
         fetchRecommendation();
-    }, []);
+    }, [progressData, isProgressLoading]);
 
 
     if (isLoading) {
