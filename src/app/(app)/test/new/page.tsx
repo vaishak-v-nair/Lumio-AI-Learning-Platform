@@ -1,6 +1,6 @@
 'use client';
 
-import { generatePersonalizedTest } from '@/ai/flows/generate-personalized-test';
+import { generateQuestionsFromTopicData } from '@/ai/flows/generate-questions-from-topic-data';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -17,12 +17,11 @@ export default function NewTestPage() {
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 setStatus('Identifying weak areas...');
-                const weakAreas = 'Listening, Grasping, Retention, Application';
                 await new Promise(resolve => setTimeout(resolve, 1500));
 
                 setStatus('Generating personalized questions for Time & Distance...');
-                const testData = await generatePersonalizedTest({
-                    weakAreas,
+                const testData = await generateQuestionsFromTopicData({
+                    topic: 'Time & Distance',
                     numberOfQuestions: 5,
                 });
                 

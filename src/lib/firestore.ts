@@ -22,6 +22,19 @@ export interface TestResult {
   topic: string;
 }
 
+export interface TopicData {
+  topic: string;
+  concepts: {
+    name: string;
+    explanation: string;
+  }[];
+  examples: {
+    problem: string;
+    solution: string;
+  }[];
+}
+
+
 export const saveTestResult = async (result: TestResult) => {
   try {
     const docRef = await addDoc(collection(firestore, 'testResults'), result);
@@ -54,6 +67,21 @@ export const getLatestTestResult = async (
     return null;
   } catch (e) {
     console.error('Error getting documents: ', e);
+    return null;
+  }
+};
+
+export const getTopicData = async (topic: string): Promise<TopicData | null> => {
+  try {
+    const q = query(collection(firestore, 'topicData'), where('topic', '==', topic), limit(1));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const doc = querySnapshot.docs[0];
+      return doc.data() as TopicData;
+    }
+    return null;
+  } catch (e) {
+    console.error('Error getting topic data: ', e);
     return null;
   }
 };
