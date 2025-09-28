@@ -92,8 +92,18 @@ export default function ProfilePage() {
 
         try {
             const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels);
-            setAvatar(croppedImage);
-            localStorage.setItem('userAvatar', croppedImage);
+            const objectURL = croppedImage; // This is already an object URL
+            setAvatar(objectURL);
+            
+            // To store it in localStorage, we need to convert it to a data URL
+            const response = await fetch(objectURL);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                 localStorage.setItem('userAvatar', reader.result as string);
+            };
+            reader.readAsDataURL(blob);
+
         } catch (e) {
             console.error(e);
             toast({

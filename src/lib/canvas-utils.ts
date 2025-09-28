@@ -22,29 +22,29 @@ export async function getCroppedImg(
     throw new Error('Could not get canvas context');
   }
 
-  const { width, height } = image;
-  const { x, y, width: cropWidth, height: cropHeight } = pixelCrop;
-
-  canvas.width = cropWidth;
-  canvas.height = cropHeight;
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
 
   ctx.drawImage(
     image,
-    x,
-    y,
-    cropWidth,
-    cropHeight,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
     0,
     0,
-    cropWidth,
-    cropHeight
+    pixelCrop.width,
+    pixelCrop.height
   );
 
-  return new Promise((resolve) => {
-    canvas.toBlob((file) => {
-      if (file) {
-        resolve(URL.createObjectURL(file));
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Canvas is empty'));
+        return;
       }
-    }, 'image/jpeg');
+      const fileUrl = window.URL.createObjectURL(blob);
+      resolve(fileUrl);
+    }, 'image/png');
   });
 }

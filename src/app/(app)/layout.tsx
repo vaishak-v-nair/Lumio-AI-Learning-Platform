@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("Guest");
+  const [userAvatar, setUserAvatar] = useState(`https://picsum.photos/seed/Guest/32/32`);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -19,18 +20,26 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       if (storedName) {
         setUserName(storedName);
       }
+      const storedAvatar = localStorage.getItem('userAvatar');
+      if (storedAvatar) {
+        setUserAvatar(storedAvatar);
+      } else if (storedName) {
+        setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
+      }
     }
   }, []);
 
   const user = {
     name: userName,
-    avatar: `https://picsum.photos/seed/${userName}/32/32`
+    avatar: userAvatar,
   };
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('userName');
       localStorage.removeItem('testResults');
+      localStorage.removeItem('userBio');
+      localStorage.removeItem('userAvatar');
     }
   };
 
