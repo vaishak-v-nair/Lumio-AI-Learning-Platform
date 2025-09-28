@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import { getLatestTestResult } from '@/lib/firestore';
+import { useTestResult } from '@/context/TestResultContext';
 
 type PerformanceDataItem = {
   fundamental: string;
@@ -26,18 +25,10 @@ const getIcon = (accuracy: number) => {
 
 export function useDetailedDiagnostics() {
   const [performanceData, setPerformanceData] = useState<PerformanceDataItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const params = useParams();
-  const topic = params.topic as string;
+  const { latestResult: results, isLoading } = useTestResult();
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      const userName = localStorage.getItem('userName') || 'guest';
-      
-      const results = await getLatestTestResult(userName, 'time-and-distance');
-      
-      if (results && topic === 'time-and-distance') {
+      if (results) {
           const categoryData: { [key: string]: { times: number[], corrects: number[] } } = {};
 
           results.questions.forEach((q: any, index: number) => {
@@ -67,16 +58,7 @@ export function useDetailedDiagnostics() {
       } else {
           setPerformanceData([]);
       }
-      setIsLoading(false);
-    };
-
-    if (topic) {
-      fetchData();
-    } else {
-        setIsLoading(false);
-        setPerformanceData([]);
-    }
-  }, [topic]);
+  }, [results]);
 
   const timeVsAccuracyData = performanceData.map(item => ({
     name: item.fundamental,

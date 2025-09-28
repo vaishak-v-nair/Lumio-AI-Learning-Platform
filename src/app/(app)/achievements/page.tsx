@@ -26,8 +26,10 @@ const allAchievements: Achievement[] = [
 export default function AchievementsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [earnedAchievements, setEarnedAchievements] = useState<Set<string>>(new Set());
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        setIsClient(true);
         const fetchAchievements = async () => {
             setIsLoading(true);
             const userName = localStorage.getItem('userName') || 'guest';
@@ -58,11 +60,25 @@ export default function AchievementsPage() {
         fetchAchievements();
     }, []);
 
+    if (!isClient) {
+        return (
+             <div className="space-y-6">
+                <h1 className="text-3xl font-bold font-headline">My Achievements</h1>
+                <p className="text-muted-foreground">Here are all the badges you can earn. Keep learning!</p>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {[...Array(4)].map((_, i) => (
+                        <Skeleton key={i} className="h-48 w-full" />
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
     if (isLoading) {
         return (
              <div className="space-y-6">
-                <Skeleton className="h-10 w-1/3" />
-                <Skeleton className="h-6 w-1/2" />
+                <h1 className="text-3xl font-bold font-headline">My Achievements</h1>
+                <p className="text-muted-foreground">Here are all the badges you can earn. Keep learning!</p>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {[...Array(4)].map((_, i) => (
                         <Skeleton key={i} className="h-48 w-full" />
