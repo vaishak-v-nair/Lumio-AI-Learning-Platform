@@ -5,14 +5,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useEffect, useState } from "react";
-import { Award, BookOpen, Clock, Target } from "lucide-react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { Award, BookOpen, Clock, Target, Upload, Camera } from "lucide-react";
 import Link from "next/link";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTestResult } from "@/context/TestResultContext";
+import ImageCropper, { Area } from '@/components/ImageCropper';
+import { getCroppedImg } from '@/lib/canvas-utils';
+import { useToast } from "@/hooks/use-toast";
+import { Slider } from "@/components/ui/slider";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 type Stat = {
     label: string;
@@ -24,13 +29,41 @@ export default function ProfilePage() {
     const [userName, setUserName] = useState("Guest");
     const [bio, setBio] = useState("This is a placeholder bio. You can edit it by clicking the button below!");
     const [avatar, setAvatar] = useState(`https://picsum.photos/seed/Guest/128/128`);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [memberSince, setMemberSince] = useState('');
     const [stats, setStats] = useState<Stat[]>([]);
 
-    const { latestResult: results, isLoading } = useTestResult();
+    const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+    const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
+    const [imageSrc, setImageSrc] = useState<string | null>(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+    const [isCropping, setIsCropping] = useState(false);
+    
+    const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isTakingPhoto, setIsTakingPhoto] = useState(false);
 
+    const { latestResult: results, isLoading } = useTestResult();
+    const { toast } = useToast();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
+        setCroppedAreaPixels(croppedAreaPixels);
+    }, []);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.addEventListener('load', () => {
+                setImageSrc(reader.result as string);
+            });
+            reader.readAsDataURL(file);
+        }
+    };
+    
     useEffect(() => {
         setIsClient(true);
         const storedName = localStorage.getItem('userName');
@@ -49,6 +82,37 @@ export default function ProfilePage() {
         }
         setMemberSince(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     }, []);
+    
+    useEffect(() => {
+        const getCameraPermission = async () => {
+          if (!isAvatarDialogOpen || !isTakingPhoto) return;
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({video: true});
+            setHasCameraPermission(true);
+    
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+            }
+          } catch (error) {
+            console.error('Error accessing camera:', error);
+            setHasCameraPermission(false);
+            toast({
+              variant: 'destructive',
+              title: 'Camera Access Denied',
+              description: 'Please enable camera permissions in your browser settings to use this feature.',
+            });
+          }
+        };
+    
+        getCameraPermission();
+
+        return () => {
+            if (videoRef.current && videoRef.current.srcObject) {
+                const stream = videoRef.current.srcObject as MediaStream;
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+    }, [isAvatarDialogOpen, isTakingPhoto, toast]);
 
     useEffect(() => {
         if (results) {
@@ -93,13 +157,58 @@ export default function ProfilePage() {
 
         localStorage.setItem('userName', newName);
         localStorage.setItem('userBio', newBio);
-
-        const newAvatar = `https://picsum.photos/seed/${newName}/128/128`;
-        setAvatar(newAvatar);
-        localStorage.setItem('userAvatar', newAvatar);
         
-        setIsDialogOpen(false);
+        setIsEditProfileOpen(false);
     };
+
+    const handleSaveAvatar = async () => {
+        if (!croppedAreaPixels || !imageSrc) return;
+        setIsCropping(true);
+        try {
+            const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+            setAvatar(croppedImage);
+            localStorage.setItem('userAvatar', croppedImage);
+            setIsAvatarDialogOpen(false);
+            setImageSrc(null);
+            setZoom(1);
+            setCrop({ x: 0, y: 0 });
+        } catch (e) {
+            console.error(e);
+            toast({
+                variant: 'destructive',
+                title: 'Error Cropping Image',
+                description: 'Something went wrong while cropping the image. Please try again.'
+            });
+        } finally {
+            setIsCropping(false);
+        }
+    };
+    
+    const handleTakePhoto = () => {
+        if (videoRef.current) {
+            const canvas = document.createElement('canvas');
+            canvas.width = videoRef.current.videoWidth;
+            canvas.height = videoRef.current.videoHeight;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+                ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+                const dataUrl = canvas.toDataURL('image/png');
+                setImageSrc(dataUrl);
+                setIsTakingPhoto(false);
+            }
+        }
+    }
+
+    const resetAvatarDialog = () => {
+        setImageSrc(null);
+        setIsTakingPhoto(false);
+        setHasCameraPermission(null);
+        if (videoRef.current && videoRef.current.srcObject) {
+            const stream = videoRef.current.srcObject as MediaStream;
+            stream.getTracks().forEach(track => track.stop());
+        }
+    }
+
 
     if (!isClient) {
         return <div className="mx-auto w-full max-w-4xl space-y-6">
@@ -119,16 +228,102 @@ export default function ProfilePage() {
             
             <Card>
                 <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-6">
-                    <Avatar className="h-32 w-32">
-                        <AvatarImage src={avatar} alt="User avatar" />
-                        <AvatarFallback className="text-4xl">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    <Dialog open={isAvatarDialogOpen} onOpenChange={(isOpen) => {
+                        setIsAvatarDialogOpen(isOpen);
+                        if (!isOpen) resetAvatarDialog();
+                    }}>
+                        <DialogTrigger asChild>
+                            <button className="relative group">
+                                <Avatar className="h-32 w-32">
+                                    <AvatarImage src={avatar} alt="User avatar" />
+                                    <AvatarFallback className="text-4xl">{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-full transition-opacity">
+                                    <Camera className="h-8 w-8 text-white" />
+                                </div>
+                            </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Update Profile Picture</DialogTitle>
+                                <DialogDescription>
+                                    Upload a new photo, or take one with your camera.
+                                </DialogDescription>
+                            </DialogHeader>
+                            {imageSrc ? (
+                                <div className="space-y-4">
+                                    <div className="relative h-64 w-full bg-muted rounded-md">
+                                        <ImageCropper
+                                            image={imageSrc}
+                                            crop={crop}
+                                            zoom={zoom}
+                                            aspect={1}
+                                            onCropChange={setCrop}
+                                            onZoomChange={setZoom}
+                                            onCropComplete={onCropComplete}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Zoom</Label>
+                                        <Slider
+                                            value={[zoom]}
+                                            min={1}
+                                            max={3}
+                                            step={0.1}
+                                            onValueChange={(val) => setZoom(val[0])}
+                                        />
+                                    </div>
+                                </div>
+                            ) : isTakingPhoto ? (
+                                <div className="space-y-4">
+                                    <video ref={videoRef} className="w-full aspect-video rounded-md" autoPlay muted />
+                                    {hasCameraPermission === false && (
+                                        <Alert variant="destructive">
+                                            <AlertTitle>Camera Access Required</AlertTitle>
+                                            <AlertDescription>
+                                                Please allow camera access to use this feature.
+                                            </AlertDescription>
+                                        </Alert>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-4">
+                                     <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        Upload Photo
+                                    </Button>
+                                    <Input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept="image/*" />
+                                    <Button variant="outline" onClick={() => setIsTakingPhoto(true)}>
+                                        <Camera className="mr-2 h-4 w-4" />
+                                        Use Camera
+                                    </Button>
+                                </div>
+                            )}
+
+                            <DialogFooter>
+                                {imageSrc ? (
+                                     <>
+                                        <Button variant="ghost" onClick={() => setImageSrc(null)}>Back</Button>
+                                        <Button onClick={handleSaveAvatar} disabled={isCropping}>
+                                            {isCropping ? 'Saving...' : 'Save Avatar'}
+                                        </Button>
+                                     </>
+                                ) : isTakingPhoto ? (
+                                    <>
+                                        <Button variant="ghost" onClick={() => setIsTakingPhoto(false)}>Back</Button>
+                                        <Button onClick={handleTakePhoto} disabled={hasCameraPermission === false}>Take Photo</Button>
+                                    </>
+                                ): null}
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
                     <div className="flex-1 text-center sm:text-left">
                         <h2 className="text-2xl font-semibold">{user.name}</h2>
                         <p className="text-muted-foreground italic mt-2">"{bio}"</p>
                         <p className="text-sm text-muted-foreground mt-2">Member since {user.memberSince}</p>
 
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <Dialog open={isEditProfileOpen} onOpenChange={setIsEditProfileOpen}>
                             <DialogTrigger asChild>
                                 <Button variant="outline" className="mt-4">Edit Profile</Button>
                             </DialogTrigger>
