@@ -7,3 +7,5 @@ import '@/ai/flows/refine-test-difficulty.ts';
 import '@/ai/flows/generate-learning-recommendation.ts';
 import '@/ai/flows/generate-questions-from-topic-data.ts';
 import '@/ai/flows/explain-answer.ts';
+import '@/ai/flows/generate-teacher-insight.ts';
+

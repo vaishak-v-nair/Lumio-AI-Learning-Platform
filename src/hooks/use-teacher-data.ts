@@ -1,85 +1,116 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { generateLearningRecommendation } from '@/ai/flows/generate-learning-recommendation';
-import type { LearningRecommendationOutput } from '@/ai/flows/generate-learning-recommendation';
+import { generateTeacherInsight } from '@/ai/flows/generate-teacher-insight';
 import { useTestResult } from '@/context/TestResultContext';
-import type { Question } from '@/ai/flows/generate-personalized-test';
+import type { Question, GeneratePersonalizedTestOutput } from '@/ai/flows/generate-personalized-test';
 
 type HeatmapDataItem = {
     student: string;
     data: { topic: string; time: number }[];
 };
 
-const MOCK_STUDENTS = [
-    { name: "Sanga", graspingTime: 90, retentionTime: 120, applicationTime: 150 },
-    { name: "Alex", graspingTime: 50, retentionTime: 65, applicationTime: 80 },
-    { name: "Ben", graspingTime: 110, retentionTime: 130, applicationTime: 100 },
+type TestResultWithUserId = GeneratePersonalizedTestOutput & {
+    userId: string;
+    timings: number[];
+    answers: (number | null)[];
+};
+
+
+const MOCK_OTHER_RESULTS: TestResultWithUserId[] = [
+    {
+        userId: "Alex",
+        questions: [
+            { category: "Grasping", difficulty: 'easy', questionText: '', options: [], correctAnswerIndex: 0, explanation: '' },
+            { category: "Retention", difficulty: 'medium', questionText: '', options: [], correctAnswerIndex: 0, explanation: '' },
+            { category: "Application", difficulty: 'hard', questionText: '', options: [], correctAnswerIndex: 0, explanation: '' },
+        ],
+        timings: [50, 65, 80],
+        answers: [0, 0, 0] // Assuming all correct for simplicity
+    },
+    {
+        userId: "Ben",
+        questions: [
+            { category: "Grasping", difficulty: 'easy', questionText: '', options: [], correctAnswerIndex: 0, explanation: '' },
+            { category: "Retention", difficulty: 'medium', questionText: '', options: [], correctAnswerIndex: 0, explanation: '' },
+            { category: "Application", difficulty: 'hard', questionText: '', options: [], correctAnswerIndex: 0, explanation: '' },
+        ],
+        timings: [110, 130, 100],
+        answers: [0, 1, 0] // 1 incorrect
+    }
 ];
+
 
 export function useTeacherData() {
     const [heatmapData, setHeatmapData] = useState<HeatmapDataItem[]>([]);
     const [insights, setInsights] = useState('');
-    const { latestResult: results, isLoading } = useTestResult();
+    const { latestResult, isLoading } = useTestResult();
 
     useEffect(() => {
         const fetchData = async () => {
-            const studentData: HeatmapDataItem[] = [];
-
-            // Add mock data for other students
-            MOCK_STUDENTS.forEach(student => {
-                 studentData.push({
-                     student: student.name,
-                     data: [
-                        { topic: 'Grasping', time: student.graspingTime },
-                        { topic: 'Retention', time: student.retentionTime },
-                        { topic: 'Application', time: student.applicationTime },
-                     ]
-                 })
-            })
-
-            // Integrate the current user's real data
-            if (results) {
-                 const categoryData: { [key: string]: number[] } = {};
-                 results.questions.forEach((q: Question, index: number) => {
+            const allResults = latestResult ? [...MOCK_OTHER_RESULTS, latestResult] : [...MOCK_OTHER_RESULTS];
+            
+            const studentData: HeatmapDataItem[] = allResults.map(result => {
+                const categoryData: { [key: string]: number[] } = {};
+                result.questions.forEach((q: Question, index: number) => {
                     const category = q.category || 'General';
                     if (!categoryData[category]) {
                         categoryData[category] = [];
                     }
-                    categoryData[category].push(results.timings[index]);
-                 });
-
-                 const userCategoryTimes = [
-                    { topic: 'Grasping', time: categoryData['Grasping'] ? Math.round(categoryData['Grasping'].reduce((a, b) => a + b, 0) / categoryData['Grasping'].length) : 0 },
-                    { topic: 'Retention', time: categoryData['Retention'] ? Math.round(categoryData['Retention'].reduce((a, b) => a + b, 0) / categoryData['Retention'].length) : 0 },
-                    { topic: 'Application', time: categoryData['Application'] ? Math.round(categoryData['Application'].reduce((a, b) => a + b, 0) / categoryData['Application'].length) : 0 },
-                 ];
-                 
-                 const existingUserIndex = studentData.findIndex(s => s.student === results.userId);
-                 if (existingUserIndex > -1) {
-                     studentData[existingUserIndex].data = userCategoryTimes;
-                 } else {
-                     studentData.push({ student: results.userId, data: userCategoryTimes });
-                 }
-            }
-            
+                    categoryData[category].push(result.timings[index]);
+                });
+                return {
+                    student: result.userId,
+                    data: ['Grasping', 'Retention', 'Application'].map(cat => ({
+                        topic: cat,
+                        time: categoryData[cat] ? Math.round(categoryData[cat].reduce((a, b) => a + b, 0) / categoryData[cat].length) : 0
+                    }))
+                };
+            });
             setHeatmapData(studentData);
 
-            try {
-                 const recommendation: LearningRecommendationOutput = await generateLearningRecommendation({
-                    studentId: 'class_summary',
-                    weakness: 'Retention', // Assuming retention is a class-wide issue based on mock data
-                    context: 'teacher'
-                });
-                setInsights(recommendation.recommendation);
-            } catch(error) {
-                console.error("Failed to fetch teacher insights:", error);
-                setInsights('Could not load AI insights at this time.');
-            }
 
+            // Generate AI Insight
+            const classPerformance: { [key: string]: { scores: number[], times: number[] } } = {};
+
+            allResults.forEach(result => {
+                result.questions.forEach((q, index) => {
+                    const category = q.category;
+                    if (!classPerformance[category]) {
+                        classPerformance[category] = { scores: [], times: [] };
+                    }
+                    classPerformance[category].scores.push(result.answers[index] === q.correctAnswerIndex ? 100 : 0);
+                    classPerformance[category].times.push(result.timings[index]);
+                });
+            });
+
+            const insightInput = Object.keys(classPerformance).map(category => {
+                const data = classPerformance[category];
+                const averageScore = data.scores.reduce((a, b) => a + b, 0) / data.scores.length;
+                const averageTime = data.times.reduce((a, b) => a + b, 0) / data.times.length;
+                return {
+                    category,
+                    averageScore: Math.round(averageScore),
+                    averageTime: Math.round(averageTime)
+                };
+            });
+
+            if (insightInput.length > 0) {
+                 try {
+                    const recommendation = await generateTeacherInsight({ classPerformance: insightInput });
+                    setInsights(recommendation.insight);
+                } catch(error) {
+                    console.error("Failed to fetch teacher insights:", error);
+                    setInsights('Could not load AI insights at this time.');
+                }
+            }
         };
-        fetchData();
-    }, [results]);
+
+        if (!isLoading) {
+             fetchData();
+        }
+    }, [latestResult, isLoading]);
 
     const hasData = !isLoading && heatmapData.length > 0;
 
