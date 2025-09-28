@@ -74,34 +74,27 @@ const generatePersonalizedTestFlow = ai.defineFlow(
   },
   async input => {
     const llmResponse = await prompt(input);
-    
-    try {
-      // First, try to parse the output directly.
-      return llmResponse.output!;
-    } catch (e) {
-      // If that fails, it might be because the model wrapped the JSON in markdown.
-      console.log('Failed to parse as JSON, trying to extract from markdown');
+    const output = llmResponse.output;
+
+    if (!output) {
+      console.error("LLM failed to produce a valid output.", llmResponse);
       const text = llmResponse.text;
       const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
       const match = text.match(jsonRegex);
       if (match && match[1]) {
         try {
           const extractedJson = JSON.parse(match[1]);
-          // Validate the extracted JSON against the schema
           const validation = GeneratePersonalizedTestOutputSchema.safeParse(extractedJson);
           if (validation.success) {
             return validation.data;
-          } else {
-             console.error("Extracted JSON failed validation:", validation.error);
-             throw new Error("Extracted JSON does not match the required schema.");
           }
         } catch (jsonError) {
           console.error("Failed to parse extracted JSON:", jsonError);
-          throw new Error("Failed to parse JSON from the model's response.");
         }
       }
-      // If no JSON block is found, throw an error.
-      throw new Error("Could not find a valid JSON block in the model's response.");
+      throw new Error("Failed to get a valid response from the model. Please try again later.");
     }
+    
+    return output;
   }
 );
