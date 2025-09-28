@@ -4,6 +4,8 @@ import { Rocket, BarChart2 } from "lucide-react";
 import Link from "next/link";
 import ProgressOverview from "@/components/dashboard/ProgressOverview";
 import DiagnosticReport from "@/components/dashboard/DiagnosticReport";
+import Achievements from "@/components/dashboard/Achievements";
+import LearningRecommendations from "@/components/dashboard/LearningRecommendations";
 
 export default function DashboardPage() {
     return (
@@ -39,6 +41,11 @@ export default function DashboardPage() {
                 <div className="lg:col-span-2">
                     <ProgressOverview />
                 </div>
+            </div>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Achievements />
+                <LearningRecommendations />
             </div>
 
             <DiagnosticReport />

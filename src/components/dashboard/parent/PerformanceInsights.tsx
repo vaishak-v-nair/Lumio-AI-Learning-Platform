@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useParentData } from "@/hooks/use-parent-data";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { GraduationCap, Clock } from "lucide-react";
+import { GraduationCap, Sparkles } from "lucide-react";
 
 export default function PerformanceInsights() {
     const { insights, isLoading, hasData } = useParentData();
@@ -39,13 +39,13 @@ export default function PerformanceInsights() {
         <Card>
             <CardHeader>
                 <CardTitle>Your Child's Performance</CardTitle>
-                <CardDescription>Time-awareness insights on their learning patterns.</CardDescription>
+                <CardDescription>AI-powered insights and recommendations for your child's learning.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex items-start gap-4 p-4 bg-accent/20 border-l-4 border-accent rounded-r-md">
-                    <Clock className="h-6 w-6 text-accent flex-shrink-0 mt-1" />
+                <div className="flex items-start gap-4 p-4 bg-primary/10 border-l-4 border-primary rounded-r-md">
+                    <Sparkles className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
                     <div>
-                         <h4 className="font-semibold">Time Analysis</h4>
+                         <h4 className="font-semibold">Personalized Recommendation</h4>
                          <p className="text-muted-foreground">{insights}</p>
                     </div>
                 </div>

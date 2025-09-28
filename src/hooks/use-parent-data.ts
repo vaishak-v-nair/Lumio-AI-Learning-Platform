@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { generateLearningRecommendation } from '@/ai/flows/generate-learning-recommendation';
+import type { LearningRecommendationOutput } from '@/ai/flows/generate-learning-recommendation';
 
 export function useParentData() {
     const [insights, setInsights] = useState('');
@@ -7,11 +9,19 @@ export function useParentData() {
     useEffect(() => {
         const fetchData = async () => {
             setIsLoading(true);
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            setInsights(''); // Start with empty data
-
-            setIsLoading(false);
+            try {
+                const recommendation: LearningRecommendationOutput = await generateLearningRecommendation({
+                    studentId: 'student123',
+                    weakness: 'Application',
+                    context: 'parent'
+                });
+                setInsights(recommendation.recommendation);
+            } catch (error) {
+                console.error("Failed to fetch parent insights:", error);
+                setInsights(''); // Clear insights on error
+            } finally {
+                setIsLoading(false);
+            }
         };
         fetchData();
     }, []);
