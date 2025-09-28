@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getTopicData } from '@/lib/firestore';
+import { getTopicData } from '@/lib/server/firestore';
 import type { TopicData } from '@/lib/firestore';
 import { generatePersonalizedTest } from './generate-personalized-test';
 
