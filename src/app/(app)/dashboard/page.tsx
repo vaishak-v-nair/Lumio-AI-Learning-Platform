@@ -23,7 +23,6 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* Main Action Card */}
                     <Card id="start-test-step" className="lg:col-span-2 flex flex-col">
                         <CardHeader className="pb-4">
                             <CardTitle>Start a New Test</CardTitle>
@@ -44,18 +43,15 @@ export default function DashboardPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Progress Overview */}
-                    <div id="progress-overview-step" className="lg:row-span-2 flex flex-col">
+                    <div id="progress-overview-step" className="flex flex-col">
                       <ProgressOverview />
                     </div>
 
-                    {/* Achievements */}
                     <div id="achievements-step">
                         <Achievements />
                     </div>
 
-                    {/* Recommendations */}
-                    <div id="recommendations-step">
+                    <div id="recommendations-step" className="lg:col-span-2">
                         <LearningRecommendations />
                     </div>
                 </div>

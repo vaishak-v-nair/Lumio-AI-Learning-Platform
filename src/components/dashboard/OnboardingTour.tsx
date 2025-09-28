@@ -104,7 +104,16 @@ export default function OnboardingTour() {
         // Delay to allow for layout shifts and scrolling
         const timeoutId = setTimeout(updateHighlight, 100);
 
-        return () => clearTimeout(timeoutId);
+        // Add event listener for resize and scroll
+        window.addEventListener('resize', updateHighlight);
+        window.addEventListener('scroll', updateHighlight, true);
+
+
+        return () => {
+            clearTimeout(timeoutId);
+            window.removeEventListener('resize', updateHighlight);
+            window.removeEventListener('scroll', updateHighlight, true);
+        };
         
     }, [currentStep, isOpen, isClient, isMobile]);
 
@@ -165,13 +174,15 @@ export default function OnboardingTour() {
         }
         // Fallback to above/below
         else {
-            top = highlightStyle.top! - dialogHeight - space;
+            top = highlightStyle.top! - dialogHeight - space > 0
+                ? highlightStyle.top! - dialogHeight - space
+                : highlightStyle.top! + highlightStyle.height! + space;
             left = highlightStyle.left! + highlightStyle.width! / 2 - dialogWidth / 2;
         }
 
         return { 
-            top: `${Math.max(space, top)}px`, 
-            left: `${Math.max(space, left)}px`,
+            top: `${Math.max(space, Math.min(top, window.innerHeight - dialogHeight - space))}px`, 
+            left: `${Math.max(space, Math.min(left, window.innerWidth - dialogWidth - space))}px`,
             transform: 'none'
         };
     };
@@ -184,19 +195,18 @@ export default function OnboardingTour() {
             {/* Highlight Box */}
             {highlightStyle && (
                 <div
-                    className="fixed rounded-lg border-2 border-primary shadow-2xl transition-all duration-300 z-[101]"
+                    className="fixed rounded-lg border-2 border-primary shadow-2xl transition-all duration-300 z-[101] pointer-events-none"
                     style={{
                         top: `${highlightStyle.top! - 4}px`,
                         left: `${highlightStyle.left! - 4}px`,
                         width: `${highlightStyle.width! + 8}px`,
                         height: `${highlightStyle.height! + 8}px`,
                         boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.6)',
-                        pointerEvents: 'none'
                     }}
                 />
             )}
             
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <Dialog open={isOpen} onOpenChange={(open) => { if (!open) finishTour(); }}>
                 <DialogContent
                     ref={dialogRef}
                     className={cn(
@@ -206,9 +216,9 @@ export default function OnboardingTour() {
                     style={highlightStyle ? getDialogPosition() : {}}
                     onInteractOutside={(e) => {
                         e.preventDefault();
-                        finishTour();
                     }}
                     onEscapeKeyDown={finishTour}
+                    hideCloseButton={true}
                 >
                     <DialogHeader className="text-center items-center pt-4">
                         <div className="p-3 bg-secondary rounded-full mb-2">
@@ -228,11 +238,14 @@ export default function OnboardingTour() {
                             />
                         ))}
                     </div>
-                    <DialogFooter className={cn("sm:justify-between flex-row", currentStep === 0 && "sm:justify-end")}>
-                        {currentStep > 0 && (
+                    <DialogFooter className={cn("sm:justify-between flex-row items-center", currentStep === 0 && "sm:justify-end justify-end")}>
+                         {currentStep > 0 && (
                             <Button variant="ghost" onClick={handlePrevious}>Previous</Button>
                         )}
-
+                        <div className="flex-grow" />
+                        {currentStep < tourSteps.length - 1 && (
+                             <Button variant="link" onClick={finishTour}>Skip Tour</Button>
+                        )}
                         <Button onClick={handleNext}>
                             {currentStep === tourSteps.length - 1 ? 'Finish' : 'Next'}
                         </Button>
