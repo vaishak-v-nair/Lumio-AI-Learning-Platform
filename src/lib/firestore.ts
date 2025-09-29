@@ -29,7 +29,7 @@ export interface TestResult {
 
 export interface UserProfile {
   userId: string;
-  userDetails?: string;
+  learningContext?: string;
   createdAt?: string;
   bio?: string;
 }

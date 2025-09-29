@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -12,11 +13,11 @@ import type { UserProfile } from '@/lib/firestore';
 export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingComplete: (profile: UserProfile) => void }) {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [userDetails, setUserDetails] = useState('');
+  const [learningContext, setLearningContext] = useState('');
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userDetails) return;
+    if (!learningContext) return;
 
     setIsLoading(true);
     const userName = localStorage.getItem('userName');
@@ -28,7 +29,7 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
 
     const profile: UserProfile = {
       userId: userName,
-      userDetails: userDetails,
+      learningContext: learningContext,
       createdAt: new Date().toISOString(),
     }
     
@@ -84,16 +85,16 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
               </CardHeader>
               <CardContent className="space-y-6">
                   <div className="space-y-2">
-                      <Label htmlFor="user-details">Describe your learning context and goals</Label>
+                      <Label htmlFor="learning-context">Describe your learning context and goals</Label>
                       <Textarea
-                          id="user-details"
+                          id="learning-context"
                           placeholder="e.g., I'm an 8th-grade student preparing for my science exams. I love physics but struggle with math concepts. I learn best with visual examples and real-world problems."
                           className="min-h-[120px] text-base"
-                          value={userDetails}
-                          onChange={(e) => setUserDetails(e.target.value)}
+                          value={learningContext}
+                          onChange={(e) => setLearningContext(e.target.value)}
                       />
                   </div>
-                  <Button type="submit" className="w-full" size="lg" disabled={!userDetails}>
+                  <Button type="submit" className="w-full" size="lg" disabled={!learningContext}>
                       {isLoading ? 'Setting things up...' : 'Create My Learning Plan'}
                   </Button>
               </CardContent>

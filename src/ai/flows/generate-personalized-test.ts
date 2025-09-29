@@ -21,7 +21,7 @@ const GeneratePersonalizedTestInputSchema = z.object({
   numberOfQuestions: z
     .number()
     .describe('The number of questions to generate for the test.'),
-  userDetails: z.string().optional().describe('Free-form text describing the user, including their education level, academic stream, interests, and learning style.'),
+  learningContext: z.string().optional().describe('Free-form text describing the user, including their education level, academic stream, interests, and learning style.'),
 });
 export type GeneratePersonalizedTestInput = z.infer<
   typeof GeneratePersonalizedTestInputSchema
@@ -59,7 +59,7 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert test generator. You will generate a test for a student based on their profile and weak areas.
 
   Student Profile:
-  - Details: {{{userDetails}}}
+  - Learning Context: {{{learningContext}}}
 
   Weak Areas: {{{weakAreas}}}
   Number of Questions: {{{numberOfQuestions}}}

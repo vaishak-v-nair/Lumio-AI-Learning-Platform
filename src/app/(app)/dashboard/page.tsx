@@ -1,4 +1,5 @@
 
+
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -72,7 +73,7 @@ export default function DashboardPage() {
         setView('loading');
         try {
             const testData = await generatePersonalizedTest({
-                userDetails: userProfile?.userDetails || '',
+                learningContext: userProfile?.learningContext || '',
                 weakAreas: 'Grasping,Retention,Application',
                 numberOfQuestions: 5,
             });
