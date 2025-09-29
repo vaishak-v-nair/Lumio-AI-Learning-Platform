@@ -7,6 +7,8 @@ import {
   where,
   orderBy,
   limit,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
 import type { GeneratePersonalizedTestOutput } from '@/ai/flows/generate-personalized-test';
@@ -48,16 +50,26 @@ export const saveTestResult = async (result: TestResult) => {
 
 export const getLatestTestResult = async (
   userId: string,
-  topic: string
+  topic?: string
 ): Promise<TestResult | null> => {
   try {
-    const q = query(
-      collection(firestore, 'testResults'),
-      where('userId', '==', userId),
-      where('topic', '==', topic),
-      orderBy('date', 'desc'),
-      limit(1)
-    );
+    let q;
+    if (topic) {
+       q = query(
+        collection(firestore, 'testResults'),
+        where('userId', '==', userId),
+        where('topic', '==', topic),
+        orderBy('date', 'desc'),
+        limit(1)
+      );
+    } else {
+       q = query(
+        collection(firestore, 'testResults'),
+        where('userId', '==', userId),
+        orderBy('date', 'desc'),
+        limit(1)
+      );
+    }
 
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
@@ -67,6 +79,24 @@ export const getLatestTestResult = async (
     return null;
   } catch (e) {
     console.error('Error getting documents: ', e);
+    return null;
+  }
+};
+
+
+export const getTopicDataDoc = async (topic: string): Promise<TopicData | null> => {
+  try {
+    const docRef = doc(firestore, 'topicData', topic);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data() as TopicData;
+    } else {
+      console.log(`No such document for topic: ${topic}`);
+      return null;
+    }
+  } catch (e) {
+    console.error('Error getting topic data: ', e);
     return null;
   }
 };

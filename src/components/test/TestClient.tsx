@@ -20,7 +20,7 @@ import { explainAnswer } from '@/ai/flows/explain-answer';
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
 
 export default function TestClient({ testId }: { testId: string }) {
-    const [testData, setTestData] = useState<GeneratePersonalizedTestOutput | null>(null);
+    const [testData, setTestData] = useState<(GeneratePersonalizedTestOutput & {topic: string}) | null>(null);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
@@ -182,7 +182,7 @@ export default function TestClient({ testId }: { testId: string }) {
             questions: testData!.questions,
             testId,
             date: new Date().toISOString(),
-            topic: 'time-and-distance'
+            topic: testData!.topic,
         };
         
         localStorage.setItem('lastTestResult', JSON.stringify(results));
@@ -212,12 +212,14 @@ export default function TestClient({ testId }: { testId: string }) {
     
     const currentQuestion = testData.questions[currentQuestionIndex];
     const progressValue = ((currentQuestionIndex + 1) / testData.questions.length) * 100;
+    const topicName = testData.topic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
 
     return (
         <Card>
             <CardHeader>
                 <div className="flex justify-between items-center mb-2">
-                    <CardTitle>Personalized Test</CardTitle>
+                    <CardTitle>Test: {topicName}</CardTitle>
                     <div className="flex items-center gap-4">
                          <span className="text-xs font-mono px-2 py-1 bg-muted rounded-md capitalize">{currentQuestion.difficulty}</span>
                         <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {testData.questions.length}</p>
@@ -260,5 +262,3 @@ export default function TestClient({ testId }: { testId: string }) {
         </Card>
     );
 }
-
-    

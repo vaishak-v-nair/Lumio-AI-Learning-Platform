@@ -24,7 +24,7 @@ export default function DashboardPage() {
                             <p className="my-6 text-sm text-muted-foreground">
                                 Our AI will generate a personalized test to help you focus on what matters most.
                             </p>
-                            <Link href="/test/new" className="w-full">
+                            <Link href="/test/new/time-and-distance" className="w-full">
                                 <Button className="w-full max-w-xs rounded-full">
                                     Start Personalized Test
                                 </Button>
@@ -42,14 +42,35 @@ export default function DashboardPage() {
                         <CardTitle>Detailed Diagnostics</CardTitle>
                         <CardDescription>Drill down into your performance on specific topics.</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-0 mt-6">
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="flex-1 flex flex-col items-start justify-center text-left p-4 border rounded-lg">
-                                <h3 className="font-semibold">Time & Distance</h3>
-                                <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic.</p>
+                    <CardContent className="p-6 grid sm:grid-cols-2 gap-6">
+                        <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm">
+                            <h3 className="font-semibold text-xl">Time & Distance</h3>
+                            <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic, or start a new test.</p>
+                             <div className="flex gap-2">
                                 <Link href="/dashboard/diagnostics/time-and-distance">
                                     <Button variant="outline" className="rounded-full">
                                         View Report
+                                    </Button>
+                                </Link>
+                                 <Link href="/test/new/time-and-distance">
+                                    <Button className="rounded-full">
+                                        Start Test
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
+                         <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm">
+                            <h3 className="font-semibold text-xl">Percentages</h3>
+                            <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic, or start a new test.</p>
+                            <div className="flex gap-2">
+                                <Link href="/dashboard/diagnostics/percentages">
+                                    <Button variant="outline" className="rounded-full">
+                                        View Report
+                                    </Button>
+                                </Link>
+                                 <Link href="/test/new/percentages">
+                                    <Button className="rounded-full">
+                                        Start Test
                                     </Button>
                                 </Link>
                             </div>

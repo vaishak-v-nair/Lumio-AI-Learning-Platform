@@ -16,13 +16,11 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
   const [latestResult, setLatestResult] = useState<TestResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchResult = useCallback(async () => {
+  const fetchResult = useCallback(async (topic?: string) => {
     setIsLoading(true);
     const userName = localStorage.getItem('userName') || 'guest';
     
     // On the results page, we want immediate feedback.
-    // The `useTestResultData` hook handles loading from localStorage for that specific page.
-    // For all other pages (Dashboard, Profile), we should fetch from Firestore to get the true latest result.
     const isResultsPage = window.location.pathname.includes('/test/results');
 
     if (isResultsPage) {
@@ -35,7 +33,7 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
     }
     
     // For all other pages, or if local storage is empty, fetch from Firestore.
-    const result = await getLatestTestResult(userName, 'time-and-distance');
+    const result = await getLatestTestResult(userName, topic);
     setLatestResult(result);
     if (result) {
         // Also update local storage if we fetched from firestore
@@ -47,7 +45,10 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
 
 
   useEffect(() => {
-    fetchResult();
+    // On initial load, try to get the topic from the URL if available
+    const pathParts = window.location.pathname.split('/');
+    const topic = pathParts.includes('diagnostics') ? pathParts[pathParts.length - 1] : undefined;
+    fetchResult(topic);
   }, [fetchResult]);
 
   return (
