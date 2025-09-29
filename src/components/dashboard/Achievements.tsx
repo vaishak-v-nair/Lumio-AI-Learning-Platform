@@ -2,7 +2,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Medal, Star, Zap } from "lucide-react";
+import { Medal, Star, Zap, ArrowRight } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { useEffect, useState } from "react";
 import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
@@ -20,9 +20,9 @@ type Achievement = {
 };
 
 const achievementList: Achievement[] = [
-    { id: 'mastered_topic', icon: <Medal className="text-amber-500" />, title: "Mastered Time & Distance", description: "Achieved 90%+ accuracy." },
-    { id: 'quick_thinker', icon: <Star className="text-yellow-500" />, title: "Quick Thinker", description: "Answered all questions in under 30s each." },
-    { id: 'streak_5', icon: <Zap className="text-blue-500" />, title: "5-Day Streak", description: "Completed a test every day for 5 days." },
+    { id: 'mastered_topic', icon: <Medal className="text-amber-500" />, title: "Topic Master", description: "Achieve 90%+ accuracy." },
+    { id: 'quick_thinker', icon: <Star className="text-yellow-500" />, title: "Quick Thinker", description: "Answered < 30s each." },
+    { id: 'streak_5', icon: <Zap className="text-blue-500" />, title: "5-Day Streak", description: "Completed tests for 5 days." },
 ];
 
 export default function Achievements() {
@@ -32,7 +32,7 @@ export default function Achievements() {
     useEffect(() => {
         const achievements: Achievement[] = [];
         if (results) {
-            // Achievement: Mastered Time & Distance
+            // Achievement: Mastered Topic
             if (results.score >= 90) {
                 const achievement = achievementList.find(a => a.id === 'mastered_topic');
                 if (achievement) achievements.push(achievement);
@@ -71,8 +71,8 @@ export default function Achievements() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Your Achievements</CardTitle>
-                <CardDescription>A glimpse of your recent accomplishments.</CardDescription>
+                <CardTitle>Recent Achievements</CardTitle>
+                <CardDescription>A glimpse of your latest accomplishments.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {earnedAchievements.length > 0 ? (
@@ -92,12 +92,14 @@ export default function Achievements() {
                         <Trophy className="h-4 w-4" />
                         <AlertTitle>No Achievements Yet</AlertTitle>
                         <AlertDescription>
-                            Complete tests to unlock new achievements and show off your skills!
+                            Complete a test to start unlocking badges!
                         </AlertDescription>
                     </Alert>
                 )}
                  <Link href="/achievements" className="!mt-6 block">
-                    <Button variant="outline" className="w-full">View All Achievements</Button>
+                    <Button variant="outline" className="w-full">
+                        View All Achievements <ArrowRight className="ml-2" />
+                    </Button>
                 </Link>
             </CardContent>
         </Card>

@@ -3,10 +3,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Zap, Medal, Star, Trophy } from 'lucide-react';
+import { Loader2, Zap, Medal, Star, Trophy, ArrowRight } from 'lucide-react';
 import DetailedDiagnosticReport from '@/components/dashboard/DetailedDiagnosticReport';
 import LearningRecommendations from '@/components/dashboard/LearningRecommendations';
 import type { TestResult } from '@/lib/firestore';
+import Link from 'next/link';
 
 const achievementIcons: { [key: string]: React.ReactNode } = {
     mastered_topic: <Medal className="h-6 w-6 text-amber-500" />,
@@ -14,6 +15,14 @@ const achievementIcons: { [key: string]: React.ReactNode } = {
     streak_5: <Zap className="h-6 w-6 text-blue-500" />,
     first_test: <Trophy className="h-6 w-6 text-green-500" />,
 };
+
+const achievementTitles: { [key: string]: string } = {
+    mastered_topic: "Topic Master",
+    quick_thinker: "Quick Thinker",
+    streak_5: "5-Day Streak",
+    first_test: "First Step",
+}
+
 
 export default function TestResults({ result, onBackToDashboard }: { result: TestResult, onBackToDashboard: () => void }) {
 
@@ -26,10 +35,14 @@ export default function TestResults({ result, onBackToDashboard }: { result: Tes
     }
     
     const earnedAchievements = [];
-    if (result.score >= 90) earnedAchievements.push({id: 'mastered_topic', title: "Topic Master"});
-    if (result.timings.every((t) => t < 30)) earnedAchievements.push({id: 'quick_thinker', title: "Quick Thinker"});
-    earnedAchievements.push({id: 'first_test', title: 'First Step'}); // Always earned on first test
-    earnedAchievements.push({ id: 'streak_5', title: "5-Day Streak" }); // Mocked
+    // Always earned on any test completion
+    earnedAchievements.push('first_test');
+
+    if (result.score >= 90) earnedAchievements.push('mastered_topic');
+    if (result.timings.every((t) => t < 30)) earnedAchievements.push('quick_thinker');
+    
+    // Mocked for demo
+    earnedAchievements.push('streak_5'); 
 
 
     return (
@@ -53,27 +66,32 @@ export default function TestResults({ result, onBackToDashboard }: { result: Tes
             </div>
 
             <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-                <LearningRecommendations />
                 <Card>
                     <CardHeader>
-                        <CardTitle>Achievements Unlocked</CardTitle>
+                        <CardTitle>Achievements Unlocked!</CardTitle>
                         <CardDescription>Your accomplishments from this test.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         {earnedAchievements.length > 0 ? (
-                            earnedAchievements.map((ach) => (
-                                <div key={ach.id} className="flex items-center gap-4 p-3 bg-secondary rounded-lg">
+                            earnedAchievements.map((achId) => (
+                                <div key={achId} className="flex items-center gap-4 p-3 bg-secondary rounded-lg animate-fade-in-up">
                                     <div className="p-2 bg-background rounded-full">
-                                        {achievementIcons[ach.id]}
+                                        {achievementIcons[achId]}
                                     </div>
-                                    <p className="font-semibold">{ach.title}</p>
+                                    <p className="font-semibold">{achievementTitles[achId]}</p>
                                 </div>
                             ))
                         ) : (
                             <p className="text-muted-foreground">No new achievements this time. Keep practicing!</p>
                         )}
+                        <Link href="/achievements" className="!mt-4 block">
+                           <Button variant="outline" className="w-full">
+                                View All Achievements <ArrowRight className="ml-2" />
+                           </Button>
+                        </Link>
                     </CardContent>
                 </Card>
+                <LearningRecommendations />
                 <Button size="lg" className="rounded-full w-full" onClick={onBackToDashboard}>Back to Dashboard</Button>
             </div>
         </div>

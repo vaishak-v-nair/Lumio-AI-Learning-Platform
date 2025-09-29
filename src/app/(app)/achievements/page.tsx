@@ -16,10 +16,10 @@ type Achievement = {
 };
 
 const allAchievements: Achievement[] = [
+    { id: 'first_test', icon: <Trophy className="h-8 w-8 text-green-500" />, title: "First Step", description: "Complete your first personalized test." },
     { id: 'mastered_topic', icon: <Medal className="h-8 w-8 text-amber-500" />, title: "Topic Master", description: "Achieve 90%+ accuracy on any topic." },
     { id: 'quick_thinker', icon: <Star className="h-8 w-8 text-yellow-500" />, title: "Quick Thinker", description: "Answer all questions in a test in under 30s each." },
     { id: 'streak_5', icon: <Zap className="h-8 w-8 text-blue-500" />, title: "5-Day Streak", description: "Complete a test every day for 5 days." },
-    { id: 'first_test', icon: <Trophy className="h-8 w-8 text-green-500" />, title: "First Step", description: "Complete your first personalized test." },
 ];
 
 export default function AchievementsPage() {
@@ -32,20 +32,27 @@ export default function AchievementsPage() {
     }, []);
 
     useEffect(() => {
+        // In a real app, you would fetch all historical data to determine achievements.
+        // For this demo, we'll base it on the latest test result.
         if (results) {
             const earned = new Set<string>();
+            
+            // Any completed test earns this.
             earned.add('first_test');
             
+            // Check for Topic Master
             if (results.score >= 90) {
                 earned.add('mastered_topic');
             }
             
+            // Check for Quick Thinker
             const allFast = results.timings && results.timings.every((t: number) => t < 30);
             if (allFast) {
                 earned.add('quick_thinker');
             }
             
             // Mock a streak for demo purposes as it requires historical data
+            // In a real app, you'd check firestore for test dates.
             earned.add('streak_5');
 
             setEarnedAchievements(earned);
@@ -53,7 +60,7 @@ export default function AchievementsPage() {
     }, [results]);
 
     const renderSkeletons = () => (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(4)].map((_, i) => (
                 <Skeleton key={i} className="h-48 w-full" />
             ))}
@@ -62,7 +69,7 @@ export default function AchievementsPage() {
 
     if (!isClient) {
         return (
-             <div className="mx-auto w-full max-w-4xl space-y-6">
+             <div className="mx-auto w-full max-w-5xl space-y-6">
                 <div>
                   <h1 className="text-3xl font-bold font-headline">My Achievements</h1>
                   <p className="text-muted-foreground">Here are all the badges you can earn. Keep learning!</p>
@@ -73,17 +80,22 @@ export default function AchievementsPage() {
     }
 
     return (
-        <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div className="mx-auto w-full max-w-5xl space-y-6">
             <div>
                 <h1 className="text-3xl font-bold font-headline">My Achievements</h1>
-                <p className="text-muted-foreground">Here are all the badges you can earn. Keep learning!</p>
+                <p className="text-muted-foreground">Here are all the badges you've earned and can unlock.</p>
             </div>
             {isLoading ? renderSkeletons() : (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {allAchievements.map((achievement) => {
                         const isEarned = earnedAchievements.has(achievement.id);
                         return (
-                            <Card key={achievement.id} className={cn("flex flex-col text-center transition-all", isEarned ? "border-primary shadow-lg" : "opacity-60")}>
+                            <Card key={achievement.id} className={cn(
+                                "flex flex-col text-center transition-all duration-300", 
+                                isEarned 
+                                ? "border-primary shadow-lg transform hover:scale-105" 
+                                : "opacity-60 bg-muted/50"
+                            )}>
                                 <CardHeader className="items-center">
                                     <div className={cn("p-4 rounded-full mb-2", isEarned ? "bg-primary/10" : "bg-muted")}>
                                     {isEarned ? achievement.icon : <Lock className="h-8 w-8 text-muted-foreground" />}
