@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check } from 'lucide-react';
@@ -35,6 +35,43 @@ export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
     const [position, setPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
     const [isOpen, setIsOpen] = useState(true);
 
+    const updatePosition = useCallback(() => {
+        if (currentStep >= tourSteps.length) return;
+
+        const step = tourSteps[currentStep];
+        const element = document.getElementById(step.elementId);
+
+        if (element) {
+            const rect = element.getBoundingClientRect();
+            const dialogWidth = 350; // approx width of the dialog
+
+            let top = 0, left = 0;
+
+            switch (step.side) {
+                case 'bottom':
+                    top = rect.bottom + 10;
+                    left = (step.align === 'start') ? rect.left : rect.left + (rect.width / 2) - (dialogWidth / 2);
+                    break;
+                case 'top':
+                    top = rect.top - 10;
+                    left = (step.align === 'start') ? rect.left : rect.left + (rect.width / 2) - (dialogWidth / 2);
+                    break;
+                case 'left':
+                    top = rect.top + (rect.height / 2);
+                    left = rect.left - dialogWidth - 10;
+                    break;
+                default: // right
+                    top = rect.top + (rect.height / 2);
+                    left = rect.right + 10;
+            }
+             setPosition({
+                top: `${top}px`,
+                left: `${left}px`,
+                transform: step.side === 'left' || step.side === 'right' ? 'translateY(-50%)' : 'none',
+            });
+        }
+    }, [currentStep]);
+    
     useEffect(() => {
         if (currentStep >= tourSteps.length) {
             setIsOpen(false);
@@ -47,40 +84,12 @@ export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
         
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-            const rect = element.getBoundingClientRect();
             element.style.setProperty('z-index', '51');
             element.style.setProperty('position', 'relative');
-            
-            const dialogWidth = 350; // approx width of the dialog
-            let top = 0, left = 0;
-
-            switch(step.side) {
-                case 'bottom':
-                    top = rect.bottom + 10;
-                    left = (step.align === 'start') ? rect.left : rect.left + (rect.width / 2) - (dialogWidth / 2);
-                    break;
-                case 'top':
-                    top = rect.top - 10;
-                    left = (step.align === 'start') ? rect.left : rect.left + (rect.width / 2) - (dialogWidth / 2);
-                    break;
-                 case 'left':
-                    top = rect.top + (rect.height / 2);
-                    left = rect.left - dialogWidth - 10;
-                    break;
-                default: // right
-                    top = rect.top + (rect.height / 2);
-                    left = rect.right + 10;
-            }
-
-            setPosition({
-                top: `${top}px`,
-                left: `${left}px`,
-                transform: step.side === 'left' || step.side === 'right' ? 'translateY(-50%)' : 'none',
-            });
-
-             // Add a highlight class to the element
             element.classList.add('tour-highlight');
 
+            // Initial position update
+            updatePosition();
         }
 
         return () => {
@@ -91,7 +100,14 @@ export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
              }
         }
 
-    }, [currentStep, onFinish]);
+    }, [currentStep, onFinish, updatePosition]);
+
+    useEffect(() => {
+        window.addEventListener('resize', updatePosition);
+        return () => {
+            window.removeEventListener('resize', updatePosition);
+        }
+    }, [updatePosition]);
 
     const handleNext = () => {
          // Remove highlight from current element before moving to next
