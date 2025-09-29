@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,8 +12,8 @@ export default function ProgressOverview() {
     return (
         <Card className="h-full">
             <CardHeader>
-                <CardTitle>Your Progress</CardTitle>
-                <CardDescription>An overview of your core learning skills.</CardDescription>
+                <CardTitle>Daily Progress</CardTitle>
+                <CardDescription>Your progress for the last 24 hours. Resets daily.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 {isLoading ? (
