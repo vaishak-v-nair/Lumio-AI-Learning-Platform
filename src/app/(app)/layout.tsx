@@ -87,9 +87,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
              <Link href="/achievements" className="text-muted-foreground transition-colors hover:text-foreground">
               Achievements
             </Link>
-             <Link href="/profile" className="text-muted-foreground transition-colors hover:text-foreground">
-              Profile
-            </Link>
           </nav>
           <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
             <div className="ml-auto flex-1 sm:flex-initial" />
