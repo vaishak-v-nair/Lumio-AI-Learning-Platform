@@ -170,7 +170,6 @@ export default function ProfilePage() {
             // Dispatch a storage event to notify other tabs/windows
             window.dispatchEvent(new Event('storage'));
         }
-        localStorage.setItem('userBio', newBio);
         
         await createUserProfile({ userId: newName, bio: newBio });
 
