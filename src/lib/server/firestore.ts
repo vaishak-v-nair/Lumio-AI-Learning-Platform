@@ -5,7 +5,7 @@ import {
 } from 'firebase/firestore';
 
 import { firestore } from '@/lib/firebase';
-import type { TopicData } from '@/lib/firestore';
+import type { TopicData, UserProfile } from '@/lib/firestore';
 
 export const getTopicData = async (topic: string): Promise<TopicData | null> => {
   try {
@@ -26,3 +26,17 @@ export const getTopicData = async (topic: string): Promise<TopicData | null> => 
     return null;
   }
 };
+
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+        const docRef = doc(firestore, 'users', userId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as UserProfile;
+        }
+        return null;
+    } catch (e) {
+        console.error('Error getting user profile: ', e);
+        return null;
+    }
+}
