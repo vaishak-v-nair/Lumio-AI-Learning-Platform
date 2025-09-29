@@ -15,6 +15,8 @@ import { generateQuestionsFromTopicData } from '@/ai/flows/generate-questions-fr
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTestResult } from "@/context/TestResultContext";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 type ViewState = 'loading' | 'onboarding' | 'dashboard' | 'testing' | 'results';
 
@@ -26,6 +28,7 @@ export default function DashboardPage() {
     const { toast } = useToast();
     const { refreshResult } = useTestResult();
     const [userName, setUserName] = useState<string | null>(null);
+    const [selectedTopic, setSelectedTopic] = useState('Personalized Test');
 
     useEffect(() => {
         const checkUser = async () => {
@@ -59,7 +62,7 @@ export default function DashboardPage() {
             });
             
             if (profile.userId) {
-                handleStartTest('Personalized Test', profile.userId);
+                handleStartTest(profile.userId);
             }
 
         } catch (error) {
@@ -73,17 +76,17 @@ export default function DashboardPage() {
         }
     };
     
-    const handleStartTest = async (topic: string, userId: string) => {
+    const handleStartTest = async (userId: string) => {
         setView('loading');
         try {
             const testData = await generateQuestionsFromTopicData({
-                topic: topic,
+                topic: selectedTopic,
                 numberOfQuestions: 5,
                 userId: userId
             });
             
             const testId = crypto.randomUUID();
-            const topicName = topic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+            const topicName = selectedTopic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
             
             setCurrentTest({ ...testData, topic: topicName, testId});
             setView('testing');
@@ -138,52 +141,41 @@ export default function DashboardPage() {
             <Card>
                  <CardHeader>
                     <CardTitle>Start a New Test</CardTitle>
-                    <CardDescription>Take a test tailored to your weak areas.</CardDescription>
+                    <CardDescription>Select a topic and begin a test tailored to your needs.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center text-center">
-                    <p className="my-6 text-sm text-muted-foreground">
-                        Our AI will generate a personalized test to help you focus on what matters most.
-                    </p>
-                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('Personalized Test', userName)}>
-                        Start Personalized Test
+                <CardContent className="flex flex-col items-center justify-center space-y-4">
+                    <Select value={selectedTopic} onValueChange={setSelectedTopic}>
+                        <SelectTrigger className="w-full max-w-xs">
+                            <SelectValue placeholder="Select a topic" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Personalized Test">Personalized Test</SelectItem>
+                            <SelectItem value="Time & Distance">Time & Distance</SelectItem>
+                            <SelectItem value="Percentages">Percentages</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName)}>
+                        Start Test
                     </Button>
                 </CardContent>
             </Card>
 
              <Card>
                 <CardHeader>
-                    <CardTitle>Detailed Diagnostics</CardTitle>
-                    <CardDescription>Drill down into your performance on specific topics.</CardDescription>
+                    <CardTitle>Past Results</CardTitle>
+                    <CardDescription>View detailed diagnostic reports for previous tests.</CardDescription>
                 </CardHeader>
-                <CardContent className="p-6 grid sm:grid-cols-2 gap-6">
-                    <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-                        <h3 className="font-semibold text-xl">Time & Distance</h3>
-                        <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic, or start a new test.</p>
-                         <div className="flex gap-2">
-                            <Link href="/dashboard/diagnostics/time-and-distance">
-                                <Button variant="outline" className="rounded-full">
-                                    View Report
-                                </Button>
-                            </Link>
-                             <Button className="rounded-full" onClick={() => handleStartTest('Time & Distance', userName)}>
-                                Start Test
-                            </Button>
-                        </div>
-                    </div>
-                     <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-                        <h3 className="font-semibold text-xl">Percentages</h3>
-                        <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic, or start a new test.</p>
-                        <div className="flex gap-2">
-                            <Link href="/dashboard/diagnostics/percentages">
-                                <Button variant="outline" className="rounded-full">
-                                    View Report
-                                </Button>
-                            </Link>
-                             <Button className="rounded-full" onClick={() => handleStartTest('Percentages', userName)}>
-                                Start Test
-                            </Button>
-                        </div>
-                    </div>
+                <CardContent className="p-6 grid sm:grid-cols-2 gap-4">
+                     <Link href="/dashboard/diagnostics/time-and-distance">
+                        <Button variant="outline" className="w-full rounded-full">
+                            Report: Time & Distance
+                        </Button>
+                    </Link>
+                     <Link href="/dashboard/diagnostics/percentages">
+                        <Button variant="outline" className="w-full rounded-full">
+                            Report: Percentages
+                        </Button>
+                    </Link>
                 </CardContent>
             </Card>
             
