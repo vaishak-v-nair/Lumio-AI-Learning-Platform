@@ -1,17 +1,16 @@
 
 "use client";
 import type { ReactNode } from "react";
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarInset, SidebarTrigger, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarSeparator } from "@/components/ui/sidebar";
-import { LayoutDashboard, LogOut, GraduationCap, User, Trophy, Settings, Users } from "lucide-react";
+import { LogOut, User, Settings } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LumioLogo } from "@/components/LumioLogo";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { TestResultProvider } from "@/context/TestResultContext";
 import { getUserProfile } from "@/lib/firestore";
+import { Button } from "@/components/ui/button";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("Guest");
@@ -25,10 +24,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     const storedName = localStorage.getItem('userName');
     if (storedName) {
       setUserName(storedName);
-       // Check if user has completed onboarding
       getUserProfile(storedName).then(profile => {
         if (!profile && pathname !== '/onboarding') {
-          router.push('/onboarding');
+          // Onboarding is now part of the main dashboard flow
+          // so we just route to dashboard
+          router.push('/dashboard');
         }
       });
     } else {
@@ -44,21 +44,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }, [pathname, router]);
 
   const handleLogout = () => {
-    localStorage.removeItem('userName');
-    localStorage.removeItem('testResults');
-    localStorage.removeItem('userBio');
-    localStorage.removeItem('userAvatar');
-    localStorage.removeItem('lastTestResultId');
-    localStorage.removeItem('lastTestResult');
-    localStorage.removeItem('onboardingComplete');
-    // Redirect to login page after logout
+    localStorage.clear();
     window.location.href = '/';
   };
 
   if (!isClient) {
     return (
         <div className="flex min-h-screen">
-          <div className="hidden md:block w-64" />
            <div className="flex-1">
              <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6"/>
              <main className="flex-1 p-4 sm:p-6">
@@ -73,115 +65,52 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     avatar: userAvatar,
   };
 
-  const isActive = (path: string) => pathname === path;
-
   return (
     <TestResultProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen">
-          <Sidebar>
-            <SidebarHeader>
-              <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-lg">
-                <LumioLogo />
-                <span className="group-data-[collapsible=icon]:hidden">Lumio</span>
-              </Link>
-            </SidebarHeader>
-            <SidebarContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="Dashboard" isActive={isActive('/dashboard')}>
-                    <Link href="/dashboard">
-                      <LayoutDashboard />
-                      <span>Dashboard</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild tooltip="My Achievements" isActive={isActive('/achievements')}>
-                    <Link href="/achievements">
-                      <Trophy />
-                      <span>My Achievements</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-
-              <SidebarGroup>
-                <SidebarGroupLabel>Perspectives</SidebarGroupLabel>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Teacher Dashboard" isActive={isActive('/teacher/dashboard')}>
-                      <Link href="/teacher/dashboard">
-                        <GraduationCap />
-                        <span>Teacher</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Parent Dashboard" isActive={isActive('/parent/dashboard')}>
-                      <Link href="/parent/dashboard">
-                        <Users />
-                        <span>Parent</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-            </SidebarContent>
-            <SidebarFooter className="border-t border-sidebar-border">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className={cn(
-                      "flex w-full items-center gap-2 overflow-hidden rounded-full p-2 text-left text-sm outline-none transition-colors",
-                      "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-                    )}>
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.avatar} alt="User avatar" />
-                        <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <span className="group-data-[collapsible=icon]:hidden font-medium truncate">{user.name}</span>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56" side="right" sideOffset={8}>
-                    <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link href="/profile">
-                          <User className="mr-2 h-4 w-4" />
-                          <span>Profile</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild className="cursor-pointer">
-                      <Link href="/settings">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-            </SidebarFooter>
-          </Sidebar>
-          <SidebarInset>
-            <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 md:justify-end">
-              <div className="flex items-center gap-4 md:hidden">
-                  <SidebarTrigger />
-              </div>
-              <div className="flex flex-1 items-center justify-center">
-              </div>
-            </header>
-            <main className="flex-1 flex items-center justify-center">
-                <div className="w-full max-w-4xl p-4 sm:p-6">
-                  {children}
-                </div>
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <div className="flex min-h-screen w-full flex-col">
+        <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
+          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+            <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
+              <LumioLogo />
+              <span>Lumio</span>
+            </Link>
+            <Link href="/dashboard" className="text-foreground transition-colors hover:text-foreground">
+              Dashboard
+            </Link>
+             <Link href="/achievements" className="text-muted-foreground transition-colors hover:text-foreground">
+              Achievements
+            </Link>
+             <Link href="/profile" className="text-muted-foreground transition-colors hover:text-foreground">
+              Profile
+            </Link>
+          </nav>
+          <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+            <div className="ml-auto flex-1 sm:flex-initial" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                 <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user.avatar} alt="User avatar" />
+                    <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">Toggle user menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/settings">Settings</Link></DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </header>
+        <main className="flex min-h-[calc(100vh_-_4rem)] flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
+          {children}
+        </main>
+      </div>
     </TestResultProvider>
   );
 }

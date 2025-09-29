@@ -1,10 +1,14 @@
 
-import MultiStepForm from '@/components/onboarding/MultiStepForm';
+'use client';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
+// This page is deprecated and the logic is now handled in the dashboard.
 export default function OnboardingPage() {
-    return (
-        <div className="w-full max-w-2xl mx-auto flex items-center justify-center min-h-[calc(100vh-8.5rem)]">
-            <MultiStepForm />
-        </div>
-    );
+    const router = useRouter();
+    useEffect(() => {
+        router.replace('/dashboard');
+    }, [router]);
+
+    return null;
 }

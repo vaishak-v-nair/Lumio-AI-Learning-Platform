@@ -1,7 +1,6 @@
 
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { GeneratePersonalizedTestOutput, Question } from '@/ai/flows/generate-personalized-test';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,54 +15,36 @@ import { saveTestResult } from '@/lib/firestore';
 import { dynamicallyScoreQuestion } from '@/ai/flows/dynamically-score-questions';
 import { refineTestDifficulty } from '@/ai/flows/refine-test-difficulty';
 import { explainAnswer } from '@/ai/flows/explain-answer';
+import type { TestResult } from '@/lib/firestore';
 
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
 
-export default function TestClient({ testId }: { testId: string }) {
-    const [testData, setTestData] = useState<(GeneratePersonalizedTestOutput & {topic: string}) | null>(null);
+export default function TestClient({ testData, onFinish }: { testData: (GeneratePersonalizedTestOutput & {topic: string, testId: string}), onFinish: (result: TestResult) => void }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
     const [scores, setScores] = useState<number[]>([]);
     const [timings, setTimings] = useState<number[]>([]);
-    const [isFinished, setIsFinished] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
     const [startTime, setStartTime] = useState(0);
     const [showHint, setShowHint] = useState(false);
     const [feedback, setFeedback] = useState<{ message: string; correct: boolean, explanation?: string } | null>(null);
-    const [isClient, setIsClient] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [currentQuestions, setCurrentQuestions] = useState<Question[]>(testData.questions);
 
-    const router = useRouter();
     const { toast } = useToast();
+    const testId = testData.testId;
+
+     useEffect(() => {
+        setUserAnswers(new Array(testData.questions.length).fill(null));
+        setScores(new Array(testData.questions.length).fill(0));
+        setTimings(new Array(testData.questions.length).fill(0));
+    }, [testData.questions]);
 
     useEffect(() => {
-        setIsClient(true);
-        const data = sessionStorage.getItem(`test_${testId}`);
-        if (data) {
-            const parsedData = JSON.parse(data);
-            setTestData(parsedData);
-            setUserAnswers(new Array(parsedData.questions.length).fill(null));
-            setScores(new Array(parsedData.questions.length).fill(0));
-            setTimings(new Array(parsedData.questions.length).fill(0));
-        } else {
-            toast({
-                variant: 'destructive',
-                title: 'Test Not Found',
-                description: 'Could not load the test data.',
-            });
-            router.push('/dashboard');
-        }
-        setIsLoading(false);
-    }, [testId, router, toast]);
-
-    useEffect(() => {
-        if (isClient) {
-            setStartTime(Date.now());
-        }
+        setStartTime(Date.now());
         setShowHint(false);
         setFeedback(null);
-    }, [currentQuestionIndex, isClient]);
+    }, [currentQuestionIndex]);
 
     const handleAnswerSubmit = async () => {
         if (selectedAnswer === null) {
@@ -77,7 +58,7 @@ export default function TestClient({ testId }: { testId: string }) {
 
         setIsSubmitting(true);
         const timeTaken = (Date.now() - startTime) / 1000;
-        const currentQuestion = testData!.questions[currentQuestionIndex];
+        const currentQuestion = currentQuestions[currentQuestionIndex];
         const userAnswerText = currentQuestion.options[selectedAnswer];
         const expectedAnswerText = currentQuestion.options[currentQuestion.correctAnswerIndex];
         const isCorrectManual = selectedAnswer === currentQuestion.correctAnswerIndex;
@@ -99,7 +80,7 @@ export default function TestClient({ testId }: { testId: string }) {
                 }),
                 refineTestDifficulty({
                     questionId: `${testId}-${currentQuestionIndex}`,
-                    successRate: isCorrectManual ? 1 : 0, // Use manual check for immediate feedback
+                    successRate: isCorrectManual ? 1 : 0,
                     currentDifficulty: currentQuestion.difficulty === 'easy' ? 1 : currentQuestion.difficulty === 'medium' ? 2 : 3,
                 })
             ]);
@@ -116,13 +97,13 @@ export default function TestClient({ testId }: { testId: string }) {
             updatedScores[currentQuestionIndex] = scoringResult.score;
             setScores(updatedScores);
 
-            if (testData) {
-                const newDifficultyString: 'easy' | 'medium' | 'hard' = difficultyResult.newDifficulty <= 1 ? 'easy' : difficultyResult.newDifficulty <= 2 ? 'medium' : 'hard';
-                const newQuestions = [...testData.questions];
-                newQuestions[currentQuestionIndex].difficulty = newDifficultyString;
-                setTestData({ ...testData, questions: newQuestions });
-                console.log(`Difficulty Adjustment: ${difficultyResult.reasoning}. New level: ${newDifficultyString}`);
-            }
+            
+            const newDifficultyString: 'easy' | 'medium' | 'hard' = difficultyResult.newDifficulty <= 1 ? 'easy' : difficultyResult.newDifficulty <= 2 ? 'medium' : 'hard';
+            const newQuestions = [...currentQuestions];
+            newQuestions[currentQuestionIndex].difficulty = newDifficultyString;
+            setCurrentQuestions(newQuestions);
+            console.log(`Difficulty Adjustment: ${difficultyResult.reasoning}. New level: ${newDifficultyString}`);
+            
 
             if (!isCorrect && timeTaken > SLOW_ANSWER_THRESHOLD) {
                 setShowHint(true);
@@ -161,7 +142,7 @@ export default function TestClient({ testId }: { testId: string }) {
         setSelectedAnswer(null);
         setShowHint(false);
 
-        if (currentQuestionIndex < testData!.questions.length - 1) {
+        if (currentQuestionIndex < currentQuestions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
             finishTest(userAnswers, timings, scores);
@@ -170,50 +151,37 @@ export default function TestClient({ testId }: { testId: string }) {
 
     const finishTest = (finalAnswers: (number | null)[], finalTimings: number[], finalScores: number[]) => {
         const averageScore = finalScores.reduce((a, b) => a + b, 0) / finalScores.length;
-        setIsFinished(true);
-
         const userName = localStorage.getItem('userName') || 'guest';
 
-        const results = {
+        const results: TestResult = {
             userId: userName,
             score: averageScore,
             answers: finalAnswers,
             timings: finalTimings,
-            questions: testData!.questions,
+            questions: currentQuestions,
             testId,
             date: new Date().toISOString(),
-            topic: testData!.topic,
+            topic: testData.topic,
         };
-        
-        localStorage.setItem('lastTestResult', JSON.stringify(results));
         
         saveTestResult(results).then(docId => {
             if (docId) {
                 localStorage.setItem('lastTestResultId', docId);
-                 router.push('/test/results');
+                onFinish(results);
             } else {
                 toast({
                     variant: 'destructive',
                     title: 'Save Failed',
-                    description: 'Could not save your test results to the database. Your dashboard may not update.',
+                    description: 'Could not save test results. Your dashboard may not update.',
                 });
-                router.push('/dashboard');
+                onFinish(results); // still show results, even if save failed
             }
         });
     };
     
-    if (isLoading || !isClient) {
-        return <div className="flex justify-center items-center h-[calc(100vh-8.5rem)]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
-    }
-
-    if (!testData || isFinished) {
-        return <div className="flex justify-center items-center h-[calc(100vh-8.5rem)]"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
-    }
-    
-    const currentQuestion = testData.questions[currentQuestionIndex];
-    const progressValue = ((currentQuestionIndex + 1) / testData.questions.length) * 100;
-    const topicName = testData.topic ? testData.topic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '';
-
+    const currentQuestion = currentQuestions[currentQuestionIndex];
+    const progressValue = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
+    const topicName = testData.topic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     return (
         <Card>
@@ -222,12 +190,12 @@ export default function TestClient({ testId }: { testId: string }) {
                     <CardTitle>Test: {topicName}</CardTitle>
                     <div className="flex items-center gap-4">
                          <span className="text-xs font-mono px-2 py-1 bg-muted rounded-md capitalize">{currentQuestion.difficulty}</span>
-                        <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {testData.questions.length}</p>
+                        <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {currentQuestions.length}</p>
                     </div>
                 </div>
                 <Progress value={progressValue} className="w-full h-2" />
             </CardHeader>
-            <CardContent className="space-y-6 pt-6">
+            <CardContent className="space-y-6 pt-6 min-h-[250px]">
                 <p className="text-lg font-semibold">{currentQuestion.questionText}</p>
                 
                 {feedback ? (
@@ -248,12 +216,12 @@ export default function TestClient({ testId }: { testId: string }) {
             </CardContent>
             <CardFooter>
                 {feedback || showHint ? (
-                    <Button onClick={goToNextQuestion} className="ml-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                    <Button onClick={goToNextQuestion} className="ml-auto">
                         Continue
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 ) : (
-                    <Button onClick={handleAnswerSubmit} disabled={isSubmitting} className="ml-auto bg-primary hover:bg-primary/90">
+                    <Button onClick={handleAnswerSubmit} disabled={isSubmitting} className="ml-auto">
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Submit Answer
                     </Button>

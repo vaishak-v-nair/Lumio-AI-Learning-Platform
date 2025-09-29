@@ -4,87 +4,43 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { createUserProfile } from '@/lib/firestore';
-import { generatePersonalizedTest } from '@/ai/flows/generate-personalized-test';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2, Rocket, Sparkles } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '../ui/label';
+import type { UserProfile } from '@/lib/firestore';
 
-export default function MultiStepForm() {
+export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingComplete: (profile: UserProfile) => void }) {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [userDetails, setUserDetails] = useState('');
-  const router = useRouter();
-  const { toast } = useToast();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userDetails) {
-      toast({
-        variant: 'destructive',
-        title: 'Details required',
-        description: 'Please tell us a bit about yourself to get started.',
-      });
-      return;
-    }
+    if (!userDetails) return;
 
     setIsLoading(true);
     const userName = localStorage.getItem('userName');
     if (!userName) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Could not find user information. Please log in again.',
-      });
-      router.push('/');
+      // This case should ideally not happen if user is on this screen
+      window.location.href = '/';
       return;
     }
 
-    try {
-      // 1. Store user details in Firestore
-      await createUserProfile({
-        userId: userName,
-        userDetails: userDetails,
-        createdAt: new Date().toISOString(),
-      });
-      localStorage.setItem('onboardingComplete', 'true');
-
-      // 2. Generate a personalized test using the AI flow
-      const testData = await generatePersonalizedTest({
-        userDetails: userDetails,
-        weakAreas: 'Grasping,Retention,Application', // Initial test covers all areas
-        numberOfQuestions: 5,
-      });
-
-      // 3. Store the generated test in session storage
-      const testId = crypto.randomUUID();
-      const topic = 'personalized-test'; // Generic topic for initial test
-      sessionStorage.setItem(`test_${testId}`, JSON.stringify({ ...testData, topic }));
-
-      toast({
-        title: 'Profile created!',
-        description: "We've created a personalized test to get you started.",
-      });
-      // 4. Redirect to the test
-      router.push(`/test/${testId}`);
-    } catch (error) {
-      console.error('Onboarding failed:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Onboarding Failed',
-        description: 'Could not save your profile or generate a test. Please try again.',
-      });
-      setIsLoading(false);
+    const profile: UserProfile = {
+      userId: userName,
+      userDetails: userDetails,
+      createdAt: new Date().toISOString(),
     }
+    
+    // The dashboard will handle saving and test generation
+    onOnboardingComplete(profile);
   };
 
   const nextStep = () => setStep((s) => s + 1);
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center text-center">
+      <div className="flex flex-col items-center justify-center text-center p-8">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
         <h2 className="text-2xl font-semibold">Crafting your personalized learning plan...</h2>
         <p className="text-muted-foreground mt-2">This may take a moment. Great things are coming!</p>
