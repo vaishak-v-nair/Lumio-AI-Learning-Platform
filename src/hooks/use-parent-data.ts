@@ -6,6 +6,9 @@ import { useTestResult } from '@/context/TestResultContext';
 
 export function useParentData() {
     const [insights, setInsights] = useState('');
+    const [strength, setStrength] = useState('');
+    const [weakness, setWeakness] = useState('');
+    const [score, setScore] = useState(0);
     const { latestResult: results, isLoading } = useTestResult();
     const [userName, setUserName] = useState('your child');
 
@@ -14,35 +17,47 @@ export function useParentData() {
         setUserName(storedName);
 
         const fetchData = async () => {
-            if (isLoading) return;
+            if (isLoading || !results) return;
+            
+            setScore(Math.round(results.score));
 
-            let weakness = 'Application'; // Default weakness
-            if (results) {
-                const categoryData: { [key: string]: { corrects: number[], count: number } } = {};
-                results.questions.forEach((q, index) => {
-                    if (!categoryData[q.category]) {
-                        categoryData[q.category] = { corrects: [], count: 0 };
-                    }
-                    categoryData[q.category].count++;
-                    if (results.answers[index] === q.correctAnswerIndex) {
-                        categoryData[q.category].corrects.push(1);
-                    }
-                });
+            const categoryData: { [key: string]: { corrects: number[], count: number, score: number } } = {};
+            results.questions.forEach((q, index) => {
+                if (!categoryData[q.category]) {
+                    categoryData[q.category] = { corrects: [], count: 0, score: 0 };
+                }
+                categoryData[q.category].count++;
+                if (results.answers[index] === q.correctAnswerIndex) {
+                    categoryData[q.category].corrects.push(1);
+                }
+            });
 
-                let lowestScore = 101;
-                for (const category in categoryData) {
-                    const score = (categoryData[category].corrects.length / categoryData[category].count) * 100;
-                    if (score < lowestScore) {
-                        lowestScore = score;
-                        weakness = category;
-                    }
+            let lowestScore = 101;
+            let highestScore = -1;
+            let weakArea = 'Application'; // Default
+            let strongArea = 'Grasping'; // Default
+
+            for (const category in categoryData) {
+                const currentScore = (categoryData[category].corrects.length / categoryData[category].count) * 100;
+                categoryData[category].score = currentScore;
+                if (currentScore < lowestScore) {
+                    lowestScore = currentScore;
+                    weakArea = category;
+                }
+                if (currentScore > highestScore) {
+                    highestScore = currentScore;
+                    strongArea = category;
                 }
             }
+            
+            setWeakness(weakArea);
+            setStrength(strongArea);
+
 
             try {
                 const recommendation: LearningRecommendationOutput = await generateLearningRecommendation({
                     studentId: 'student123',
-                    weakness: weakness,
+                    weakness: weakArea,
                     context: 'parent'
                 });
                 setInsights(recommendation.recommendation);
@@ -55,7 +70,7 @@ export function useParentData() {
         fetchData();
     }, [results, isLoading]);
 
-    const hasData = !isLoading && insights.length > 0;
+    const hasData = !isLoading && !!results;
 
-    return { insights, isLoading, hasData, userName };
+    return { insights, strength, weakness, score, isLoading, hasData, userName };
 }
