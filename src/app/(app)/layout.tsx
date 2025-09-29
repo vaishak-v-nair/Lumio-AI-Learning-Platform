@@ -11,6 +11,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { TestResultProvider } from "@/context/TestResultContext";
 import { getUserProfile } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/achievements", label: "Achievements" },
+    { href: "/story/sanga", label: "Sanga's Story" },
+    { href: "/parent/dashboard", label: "Parent View" },
+    { href: "/teacher/dashboard", label: "Teacher View" },
+];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("Guest");
@@ -76,26 +85,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <TestResultProvider>
       <div className="flex min-h-screen w-full flex-col">
         <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
-          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-8">
             <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
               <LumioLogo />
-              <span>Lumio</span>
+              <span className="font-bold">Lumio</span>
             </Link>
-            <Link href="/dashboard" className="text-foreground transition-colors hover:text-foreground">
-              Dashboard
-            </Link>
-             <Link href="/achievements" className="text-muted-foreground transition-colors hover:text-foreground">
-              Achievements
-            </Link>
-             <Link href="/story/sanga" className="text-muted-foreground transition-colors hover:text-foreground">
-              Sanga's Story
-            </Link>
-            <Link href="/parent/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">
-              Parent View
-            </Link>
-            <Link href="/teacher/dashboard" className="text-muted-foreground transition-colors hover:text-foreground">
-              Teacher View
-            </Link>
+            {navItems.map((item) => (
+                <Link key={item.href} href={item.href} 
+                    className={cn("relative font-semibold transition-colors hover:text-primary",
+                    pathname === item.href ? "text-primary" : "text-muted-foreground",
+                    "after:absolute after:bottom-[-2px] after:left-0 after:h-[2px] after:w-full after:bg-primary after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100",
+                    pathname === item.href && "after:scale-x-100"
+                    )}
+                >
+                    {item.label}
+                </Link>
+            ))}
           </nav>
           <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
             <div className="ml-auto flex-1 sm:flex-initial" />
