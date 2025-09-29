@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Slider } from "@/components/ui/slider";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getUserProfile, createUserProfile } from "@/lib/firestore";
 
 type Stat = {
     label: string;
@@ -67,21 +69,27 @@ export default function ProfilePage() {
     
     useEffect(() => {
         setIsClient(true);
-        const storedName = localStorage.getItem('userName');
-        if (storedName) {
-            setUserName(storedName);
-        }
-        const storedBio = localStorage.getItem('userBio');
-        if (storedBio) {
-            setBio(storedBio);
-        }
+        const loadProfile = async () => {
+            const storedName = localStorage.getItem('userName');
+            if (storedName) {
+                setUserName(storedName);
+                const profile = await getUserProfile(storedName);
+                if (profile) {
+                    setBio(profile.bio || "This is a placeholder bio. You can edit it by clicking the button below!");
+                    setMemberSince(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+                }
+            }
+        };
+
+        loadProfile();
+        
         const storedAvatar = localStorage.getItem('userAvatar');
          if (storedAvatar) {
             setAvatar(storedAvatar);
         } else {
+            const storedName = localStorage.getItem('userName');
             setAvatar(`https://picsum.photos/seed/${storedName || 'Guest'}/128/128`);
         }
-        setMemberSince(new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
     }, []);
     
     useEffect(() => {
@@ -148,7 +156,7 @@ export default function ProfilePage() {
         memberSince: memberSince
     };
     
-    const handleSaveChanges = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const newName = e.currentTarget.username.value;
         const newBio = e.currentTarget.bio.value;
@@ -156,8 +164,20 @@ export default function ProfilePage() {
         setUserName(newName);
         setBio(newBio);
 
-        localStorage.setItem('userName', newName);
+        const oldName = localStorage.getItem('userName');
+        if (oldName !== newName) {
+            localStorage.setItem('userName', newName);
+            // Dispatch a storage event to notify other tabs/windows
+            window.dispatchEvent(new Event('storage'));
+        }
         localStorage.setItem('userBio', newBio);
+        
+        await createUserProfile({ userId: newName, bio: newBio });
+
+        toast({
+            title: "Profile Updated",
+            description: "Your profile has been successfully saved.",
+        });
         
         setIsEditProfileOpen(false);
     };
@@ -169,6 +189,7 @@ export default function ProfilePage() {
             const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
             setAvatar(croppedImage);
             localStorage.setItem('userAvatar', croppedImage);
+            window.dispatchEvent(new Event('storage')); // Notify layout of avatar change
             setIsAvatarDialogOpen(false);
             setImageSrc(null);
             setZoom(1);
@@ -403,5 +424,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-    

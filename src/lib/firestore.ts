@@ -1,4 +1,5 @@
 
+
 'use client';
 import {
   collection,
@@ -28,8 +29,9 @@ export interface TestResult {
 
 export interface UserProfile {
   userId: string;
-  userDetails: string;
-  createdAt: string;
+  userDetails?: string;
+  createdAt?: string;
+  bio?: string;
 }
 
 export interface TopicData {
@@ -111,11 +113,12 @@ export const getTopicDataDoc = async (topic: string): Promise<TopicData | null> 
 
 export const createUserProfile = async (profile: UserProfile): Promise<boolean> => {
   try {
-    await setDoc(doc(firestore, 'users', profile.userId), profile);
-    console.log(`User profile created for ${profile.userId}`);
+    // Use setDoc with merge: true to create or update the profile
+    await setDoc(doc(firestore, 'users', profile.userId), profile, { merge: true });
+    console.log(`User profile created/updated for ${profile.userId}`);
     return true;
   } catch (e) {
-    console.error('Error creating user profile: ', e);
+    console.error('Error creating/updating user profile: ', e);
     return false;
   }
 };

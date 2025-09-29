@@ -1,4 +1,5 @@
 
+
 "use client";
 import type { ReactNode } from "react";
 import { LogOut, User, Settings } from "lucide-react";
@@ -6,7 +7,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LumioLogo } from "@/components/LumioLogo";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { TestResultProvider } from "@/context/TestResultContext";
 import { getUserProfile } from "@/lib/firestore";
@@ -19,22 +20,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    setIsClient(true);
+  const fetchAndSetUserData = useCallback(async () => {
     const storedName = localStorage.getItem('userName');
     if (storedName) {
       setUserName(storedName);
-      getUserProfile(storedName).then(profile => {
-        if (!profile && pathname !== '/onboarding') {
-          // Onboarding is now part of the main dashboard flow
-          // so we just route to dashboard
-          router.push('/dashboard');
-        }
-      });
+      const profile = await getUserProfile(storedName);
+      if (!profile && pathname !== '/onboarding') {
+        router.push('/dashboard');
+      }
     } else {
-        router.push('/');
+      router.push('/');
     }
-    
+
     const storedAvatar = localStorage.getItem('userAvatar');
     if (storedAvatar) {
       setUserAvatar(storedAvatar);
@@ -42,6 +39,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
     }
   }, [pathname, router]);
+
+  useEffect(() => {
+    setIsClient(true);
+    fetchAndSetUserData();
+
+    // Listen for storage changes to update user info in real-time
+    window.addEventListener('storage', fetchAndSetUserData);
+    return () => {
+      window.removeEventListener('storage', fetchAndSetUserData);
+    };
+  }, [fetchAndSetUserData]);
 
   const handleLogout = () => {
     localStorage.clear();
