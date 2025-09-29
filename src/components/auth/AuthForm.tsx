@@ -26,19 +26,44 @@ export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [authAction, setAuthAction] = useState<AuthAction>('login');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isClient, setIsClient] = useState(false);
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  const validate = () => {
+    let isValid = true;
+    // Username validation: 3-15 characters, alphanumeric
+    const usernameRegex = /^[a-zA-Z0-9]{3,15}$/;
+    if (authAction === 'signup' && !usernameRegex.test(username)) {
+      setUsernameError('Username must be 3-15 alphanumeric characters.');
+      isValid = false;
+    } else {
+      setUsernameError('');
+    }
+
+    // Password validation: at least 6 characters
+    if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters long.');
+      isValid = false;
+    } else {
+      setPasswordError('');
+    }
+    return isValid;
+  }
+
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isClient) return;
+    if (!isClient || !validate()) return;
 
     setIsLoading(true);
 
+    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     if (authAction === 'signup') {
@@ -53,14 +78,15 @@ export default function AuthForm() {
             return;
         }
 
-      toast({
-          title: 'Account Created',
-          description: 'You have successfully signed up. Please log in.',
-      });
-      setAuthAction('login');
-      setIsLoading(false);
-    } else {
-      const name = authAction === 'login' ? (email.split('@')[0] || 'guest') : 'guest';
+      // Directly log in after signup
+      localStorage.setItem('userName', username);
+      // Onboarding will be triggered on the dashboard page
+      router.push('/dashboard');
+
+    } else { // Login
+      // This is a mock login. In a real app, you'd verify credentials.
+      // We'll use the part of the email before the @ as the username for login demo.
+      const name = email.split('@')[0] || 'guest';
       localStorage.setItem('userName', name);
       
       const profile = await getUserProfile(name);
@@ -73,7 +99,7 @@ export default function AuthForm() {
   };
 
   return (
-    <Card className="relative overflow-hidden h-[450px]">
+    <Card className="relative overflow-hidden h-[480px]">
         <div className={cn("transition-all duration-500 absolute w-full", authAction === 'login' ? 'opacity-100' : 'opacity-0 -translate-x-full')}>
             <CardHeader className="text-center">
                 <CardTitle>Welcome Back</CardTitle>
@@ -89,7 +115,8 @@ export default function AuthForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password-login">Password</Label>
-                    <Input id="password-login" type="password" required />
+                    <Input id="password-login" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                     {passwordError && authAction === 'login' && <p className="text-xs text-destructive">{passwordError}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading || !isClient}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -117,6 +144,7 @@ export default function AuthForm() {
                 <div className="space-y-2">
                     <Label htmlFor="username-signup">Username</Label>
                     <Input id="username-signup" type="text" placeholder="your_username" required value={username} onChange={(e) => setUsername(e.target.value)} />
+                    {usernameError && <p className="text-xs text-destructive">{usernameError}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="email-signup">Email</Label>
@@ -124,7 +152,8 @@ export default function AuthForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password-signup">Password</Label>
-                    <Input id="password-signup" type="password" required />
+                    <Input id="password-signup" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                    {passwordError && authAction === 'signup' && <p className="text-xs text-destructive">{passwordError}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading || !isClient}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
