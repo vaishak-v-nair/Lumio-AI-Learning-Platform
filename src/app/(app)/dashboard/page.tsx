@@ -15,7 +15,6 @@ import { generateQuestionsFromTopicData } from '@/ai/flows/generate-questions-fr
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTestResult } from "@/context/TestResultContext";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 type ViewState = 'loading' | 'onboarding' | 'dashboard' | 'testing' | 'results';
@@ -28,7 +27,6 @@ export default function DashboardPage() {
     const { toast } = useToast();
     const { refreshResult } = useTestResult();
     const [userName, setUserName] = useState<string | null>(null);
-    const [selectedTopic, setSelectedTopic] = useState('Personalized Test');
 
     useEffect(() => {
         const checkUser = async () => {
@@ -80,15 +78,14 @@ export default function DashboardPage() {
         setView('loading');
         try {
             const testData = await generateQuestionsFromTopicData({
-                topic: selectedTopic,
+                topic: "Personalized Test",
                 numberOfQuestions: 5,
                 userId: userId
             });
             
             const testId = crypto.randomUUID();
-            const topicName = selectedTopic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
             
-            setCurrentTest({ ...testData, topic: topicName, testId});
+            setCurrentTest({ ...testData, topic: "Personalized Test", testId});
             setView('testing');
 
         } catch (error) {
@@ -141,41 +138,12 @@ export default function DashboardPage() {
             <Card>
                  <CardHeader>
                     <CardTitle>Start a New Test</CardTitle>
-                    <CardDescription>Select a topic and begin a test tailored to your needs.</CardDescription>
+                    <CardDescription>Begin a test tailored to your needs.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center space-y-4">
-                    <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-                        <SelectTrigger className="w-full max-w-xs">
-                            <SelectValue placeholder="Select a topic" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Personalized Test">Personalized Test</SelectItem>
-                            <SelectItem value="Time & Distance">Time & Distance</SelectItem>
-                            <SelectItem value="Percentages">Percentages</SelectItem>
-                        </SelectContent>
-                    </Select>
                     <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName)}>
-                        Start Test
+                        Start Personalized Test
                     </Button>
-                </CardContent>
-            </Card>
-
-             <Card>
-                <CardHeader>
-                    <CardTitle>Past Results</CardTitle>
-                    <CardDescription>View detailed diagnostic reports for previous tests.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6 grid sm:grid-cols-2 gap-4">
-                     <Link href="/dashboard/diagnostics/time-and-distance">
-                        <Button variant="outline" className="w-full rounded-full">
-                            Report: Time & Distance
-                        </Button>
-                    </Link>
-                     <Link href="/dashboard/diagnostics/percentages">
-                        <Button variant="outline" className="w-full rounded-full">
-                            Report: Percentages
-                        </Button>
-                    </Link>
                 </CardContent>
             </Card>
             
