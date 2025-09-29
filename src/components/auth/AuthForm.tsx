@@ -15,8 +15,10 @@ import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { getUserProfile } from '@/lib/firestore';
+import { getUserProfile, createUserProfile } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 type AuthAction = 'login' | 'signup';
 
@@ -38,21 +40,20 @@ export default function AuthForm() {
 
   const validate = () => {
     let isValid = true;
-    // Username validation: 3-15 characters, alphanumeric
-    const usernameRegex = /^[a-zA-Z0-9]{3,15}$/;
-    if (authAction === 'signup' && !usernameRegex.test(username)) {
-      setUsernameError('Username must be 3-15 alphanumeric characters.');
-      isValid = false;
-    } else {
-      setUsernameError('');
-    }
+    setUsernameError('');
+    setPasswordError('');
 
-    // Password validation: at least 6 characters
+    if (authAction === 'signup') {
+        const usernameRegex = /^[a-zA-Z0-9]{3,15}$/;
+        if (!usernameRegex.test(username)) {
+            setUsernameError('Username must be 3-15 alphanumeric characters.');
+            isValid = false;
+        }
+    }
+    
     if (password.length < 6) {
       setPasswordError('Password must be at least 6 characters long.');
       isValid = false;
-    } else {
-      setPasswordError('');
     }
     return isValid;
   }
@@ -62,9 +63,6 @@ export default function AuthForm() {
     if (!isClient || !validate()) return;
 
     setIsLoading(true);
-
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
 
     if (authAction === 'signup') {
         const existingProfile = await getUserProfile(username);
@@ -77,24 +75,60 @@ export default function AuthForm() {
             setIsLoading(false);
             return;
         }
+        
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            await updateProfile(user, { displayName: username });
+            
+            await createUserProfile({ userId: username });
 
-      // Directly log in after signup
-      localStorage.setItem('userName', username);
-      // Onboarding will be triggered on the dashboard page
-      router.push('/dashboard');
+            localStorage.setItem('userName', username);
+            localStorage.setItem('userUID', user.uid);
+            
+            router.push('/dashboard');
+        } catch (error: any) {
+            console.error("Signup error", error);
+             toast({
+                variant: 'destructive',
+                title: 'Sign Up Failed',
+                description: error.message || 'An unexpected error occurred.',
+            });
+            setIsLoading(false);
+        }
 
     } else { // Login
-      // This is a mock login. In a real app, you'd verify credentials.
-      // We'll use the part of the email before the @ as the username for login demo.
-      const name = email.split('@')[0] || 'guest';
-      localStorage.setItem('userName', name);
-      
-      const profile = await getUserProfile(name);
+       try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            const userName = user.displayName;
 
-      if (profile) {
-          localStorage.setItem('onboardingComplete', 'true');
-      }
-      router.push('/dashboard');
+            if (userName) {
+                 localStorage.setItem('userName', userName);
+                 localStorage.setItem('userUID', user.uid);
+                 const profile = await getUserProfile(userName);
+                 if (profile) {
+                    localStorage.setItem('onboardingComplete', 'true');
+                 }
+                 router.push('/dashboard');
+            } else {
+                // This case can happen if displayName is not set on an existing user.
+                // We'll treat the part before the @ as the username.
+                const fallbackName = user.email?.split('@')[0] || 'guest';
+                localStorage.setItem('userName', fallbackName);
+                localStorage.setItem('userUID', user.uid);
+                router.push('/dashboard');
+            }
+
+       } catch (error: any) {
+            console.error("Login error", error);
+            toast({
+                variant: 'destructive',
+                title: 'Login Failed',
+                description: "Invalid email or password. Please try again.",
+            });
+            setIsLoading(false);
+       }
     }
   };
 
@@ -148,7 +182,7 @@ export default function AuthForm() {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="email-signup">Email</Label>
-                    <Input id="email-signup" type="email" placeholder="m@example.com" required />
+                    <Input id="email-signup" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password-signup">Password</Label>

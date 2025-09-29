@@ -11,6 +11,8 @@ import { TestResultProvider } from "@/context/TestResultContext";
 import { getUserProfile } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { auth } from "@/lib/firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -27,40 +29,57 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const fetchAndSetUserData = useCallback(async () => {
-    const storedName = localStorage.getItem('userName');
-    if (storedName) {
-      setUserName(storedName);
-      const profile = await getUserProfile(storedName);
-      if (!profile && pathname !== '/onboarding') {
-        router.push('/dashboard');
-      }
-    } else {
-      router.push('/');
-    }
+  const fetchAndSetUserData = useCallback(async (user: import('firebase/auth').User | null) => {
+    if (user) {
+        const storedName = user.displayName || localStorage.getItem('userName');
+        if (storedName) {
+            setUserName(storedName);
+            const profile = await getUserProfile(storedName);
+            if (!profile && pathname !== '/dashboard') { // Allow onboarding flow on dashboard
+                router.push('/dashboard');
+            }
+        } else {
+             router.push('/');
+        }
+        
+        const storedAvatar = localStorage.getItem('userAvatar');
+        if (storedAvatar) {
+            setUserAvatar(storedAvatar);
+        } else if (storedName) {
+            setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
+        }
 
-    const storedAvatar = localStorage.getItem('userAvatar');
-    if (storedAvatar) {
-      setUserAvatar(storedAvatar);
-    } else if (storedName) {
-      setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
+    } else {
+        router.push('/');
     }
   }, [pathname, router]);
 
   useEffect(() => {
     setIsClient(true);
-    fetchAndSetUserData();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        fetchAndSetUserData(user);
+    });
+    
+    // Also listen for local storage changes for things like avatar updates
+    const handleStorageChange = () => {
+        const storedName = localStorage.getItem('userName');
+        const storedAvatar = localStorage.getItem('userAvatar');
+        if (storedName) setUserName(storedName);
+        if (storedAvatar) setUserAvatar(storedAvatar);
+    };
 
-    // Listen for storage changes to update user info in real-time
-    window.addEventListener('storage', fetchAndSetUserData);
+    window.addEventListener('storage', handleStorageChange);
+    
     return () => {
-      window.removeEventListener('storage', fetchAndSetUserData);
+        unsubscribe();
+        window.removeEventListener('storage', handleStorageChange);
     };
   }, [fetchAndSetUserData]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut(auth);
     localStorage.clear();
-    window.location.href = '/';
+    router.push('/');
   };
 
   if (!isClient) {
