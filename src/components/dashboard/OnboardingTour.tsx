@@ -1,0 +1,151 @@
+
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Check } from 'lucide-react';
+
+const tourSteps = [
+    {
+        elementId: 'tour-step-1',
+        title: 'Start Your Learning Journey',
+        description: "This is where you'll begin. Take personalized tests or choose a specific topic to work on.",
+        side: 'bottom',
+        align: 'start',
+    },
+    {
+        elementId: 'tour-step-2',
+        title: 'Track Your Progress',
+        description: "Keep an eye on your core skills here. Our AI tracks your performance to identify areas for improvement.",
+        side: 'left',
+        align: 'center',
+    },
+    {
+        elementId: 'tour-step-3',
+        title: 'Get Personalized Recommendations',
+        description: "After each test, our AI will provide a personalized plan with actionable tips to help you grow.",
+        side: 'top',
+        align: 'start',
+    }
+];
+
+export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
+    const [currentStep, setCurrentStep] = useState(0);
+    const [position, setPosition] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
+    const [isOpen, setIsOpen] = useState(true);
+
+    useEffect(() => {
+        if (currentStep >= tourSteps.length) {
+            setIsOpen(false);
+            onFinish();
+            return;
+        }
+
+        const step = tourSteps[currentStep];
+        const element = document.getElementById(step.elementId);
+        
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+            const rect = element.getBoundingClientRect();
+            element.style.setProperty('z-index', '51');
+            element.style.setProperty('position', 'relative');
+            
+            const dialogWidth = 350; // approx width of the dialog
+            let top = 0, left = 0;
+
+            switch(step.side) {
+                case 'bottom':
+                    top = rect.bottom + 10;
+                    left = (step.align === 'start') ? rect.left : rect.left + (rect.width / 2) - (dialogWidth / 2);
+                    break;
+                case 'top':
+                    top = rect.top - 10;
+                    left = (step.align === 'start') ? rect.left : rect.left + (rect.width / 2) - (dialogWidth / 2);
+                    break;
+                 case 'left':
+                    top = rect.top + (rect.height / 2);
+                    left = rect.left - dialogWidth - 10;
+                    break;
+                default: // right
+                    top = rect.top + (rect.height / 2);
+                    left = rect.right + 10;
+            }
+
+            setPosition({
+                top: `${top}px`,
+                left: `${left}px`,
+                transform: step.side === 'left' || step.side === 'right' ? 'translateY(-50%)' : 'none',
+            });
+
+             // Add a highlight class to the element
+            element.classList.add('tour-highlight');
+
+        }
+
+        return () => {
+             if (element) {
+                element.classList.remove('tour-highlight');
+                 element.style.removeProperty('z-index');
+                 element.style.removeProperty('position');
+             }
+        }
+
+    }, [currentStep, onFinish]);
+
+    const handleNext = () => {
+         // Remove highlight from current element before moving to next
+        const currentElement = document.getElementById(tourSteps[currentStep].elementId);
+        if (currentElement) {
+            currentElement.classList.remove('tour-highlight');
+        }
+        setCurrentStep(prev => prev + 1);
+    };
+
+    if (currentStep >= tourSteps.length) return null;
+
+    const step = tourSteps[currentStep];
+    const isLastStep = currentStep === tourSteps.length - 1;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={(open) => { if(!open) onFinish() }}>
+             <style jsx global>{`
+                .tour-highlight {
+                    outline: 2px solid hsl(var(--primary));
+                    box-shadow: 0 0 0 4px hsl(var(--background)), 0 0 15px 5px hsl(var(--primary) / 0.5);
+                    border-radius: var(--radius);
+                }
+                .dialog-overlay {
+                    position: fixed;
+                    inset: 0;
+                    background-color: hsl(var(--background) / 0.6);
+                    z-index: 50;
+                    backdrop-filter: blur(2px);
+                }
+            `}</style>
+            <div className="dialog-overlay" />
+            <DialogContent
+                hideCloseButton
+                className="fixed w-[350px] transition-all duration-300 ease-in-out"
+                style={position}
+                onInteractOutside={(e) => e.preventDefault()}
+            >
+                <DialogHeader>
+                    <DialogTitle>{step.title}</DialogTitle>
+                    <DialogDescription>
+                        {step.description}
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex justify-between items-center w-full">
+                    <span className="text-sm text-muted-foreground">
+                        {currentStep + 1} / {tourSteps.length}
+                    </span>
+                    <Button onClick={handleNext}>
+                        {isLastStep ? 'Start First Test' : 'Next'}
+                        {isLastStep ? <Check className="ml-2 h-4 w-4" /> : <ArrowRight className="ml-2 h-4 w-4" />}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}

@@ -78,16 +78,16 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
                       </div>
                       <div>
                           <CardTitle>Tell Us About Yourself</CardTitle>
-                          <CardDescription>This helps us tailor the experience just for you.</CardDescription>
+                          <CardDescription>This helps our AI tailor the experience just for you.</CardDescription>
                       </div>
                   </div>
               </CardHeader>
               <CardContent className="space-y-6">
                   <div className="space-y-2">
-                      <Label htmlFor="user-details">Describe your learning context</Label>
+                      <Label htmlFor="user-details">Describe your learning context and goals</Label>
                       <Textarea
                           id="user-details"
-                          placeholder="e.g., I'm an 8th-grade student in the science stream. I'm interested in algebra and physics, and I learn best with visual examples."
+                          placeholder="e.g., I'm an 8th-grade student preparing for my science exams. I love physics but struggle with math concepts. I learn best with visual examples and real-world problems."
                           className="min-h-[120px] text-base"
                           value={userDetails}
                           onChange={(e) => setUserDetails(e.target.value)}
