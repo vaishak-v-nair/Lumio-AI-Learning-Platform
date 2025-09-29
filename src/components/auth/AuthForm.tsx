@@ -59,7 +59,7 @@ export default function AuthForm() {
           localStorage.setItem('onboardingComplete', 'true');
           router.push('/dashboard');
       } else {
-          router.push('/onboarding');
+          router.push('/dashboard');
       }
     }
   };

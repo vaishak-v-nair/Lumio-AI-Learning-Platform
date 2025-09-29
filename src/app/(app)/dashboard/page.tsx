@@ -1,5 +1,4 @@
 
-
 'use client';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import TestClient from "@/components/test/TestClient";
 import TestResults from "@/components/dashboard/TestResults";
 import { useEffect, useState } from "react";
 import { getUserProfile, createUserProfile, type UserProfile, type TestResult } from "@/lib/firestore";
-import { generatePersonalizedTest } from "@/ai/flows/generate-personalized-test";
+import { generateQuestionsFromTopicData } from '@/ai/flows/generate-questions-from-topic-data';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTestResult } from "@/context/TestResultContext";
@@ -56,7 +55,7 @@ export default function DashboardPage() {
                 title: "Let's Get Started!",
                 description: "We're creating a personalized test to get you started.",
             });
-            handleStartTest('personalized-test');
+            handleStartTest('Personalized Test');
 
         } catch (error) {
             console.error('Onboarding failed:', error);
@@ -72,9 +71,8 @@ export default function DashboardPage() {
     const handleStartTest = async (topic: string) => {
         setView('loading');
         try {
-            const testData = await generatePersonalizedTest({
-                learningContext: userProfile?.learningContext || '',
-                weakAreas: 'Grasping,Retention,Application',
+            const testData = await generateQuestionsFromTopicData({
+                topic: topic,
                 numberOfQuestions: 5,
             });
             
@@ -140,7 +138,7 @@ export default function DashboardPage() {
                     <p className="my-6 text-sm text-muted-foreground">
                         Our AI will generate a personalized test to help you focus on what matters most.
                     </p>
-                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('personalized-test')}>
+                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('Personalized Test')}>
                         Start Personalized Test
                     </Button>
                 </CardContent>
@@ -161,7 +159,7 @@ export default function DashboardPage() {
                                     View Report
                                 </Button>
                             </Link>
-                             <Button className="rounded-full" onClick={() => handleStartTest('time-and-distance')}>
+                             <Button className="rounded-full" onClick={() => handleStartTest('Time & Distance')}>
                                 Start Test
                             </Button>
                         </div>
@@ -175,7 +173,7 @@ export default function DashboardPage() {
                                     View Report
                                 </Button>
                             </Link>
-                             <Button className="rounded-full" onClick={() => handleStartTest('percentages')}>
+                             <Button className="rounded-full" onClick={() => handleStartTest('Percentages')}>
                                 Start Test
                             </Button>
                         </div>
