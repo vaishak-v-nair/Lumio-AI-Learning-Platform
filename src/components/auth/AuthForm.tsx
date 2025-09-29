@@ -72,25 +72,9 @@ export default function AuthForm() {
     }
   };
 
-  const handleGuestLogin = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isClient) return;
-
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const name = 'Guest';
-    localStorage.setItem('userName', name);
-    const profile = await getUserProfile(name);
-    if (profile) {
-        localStorage.setItem('onboardingComplete', 'true');
-    }
-    router.push('/dashboard');
-  }
-
   return (
-    <Card className="overflow-hidden">
-        <div className={cn("transition-all duration-500", authAction === 'login' ? 'opacity-100 visible' : 'opacity-0 invisible absolute')}>
+    <Card className="relative overflow-hidden h-[450px]">
+        <div className={cn("transition-all duration-500 absolute w-full", authAction === 'login' ? 'opacity-100' : 'opacity-0 -translate-x-full')}>
             <CardHeader className="text-center">
                 <CardTitle>Welcome Back</CardTitle>
                 <CardDescription>
@@ -111,9 +95,6 @@ export default function AuthForm() {
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Login
                 </Button>
-                 <Button onClick={handleGuestLogin} variant="outline" className="w-full" disabled={isLoading || !isClient}>
-                    Continue as Guest
-                </Button>
                 <p className="text-center text-sm text-muted-foreground">
                     Don&apos;t have an account?{' '}
                     <button type="button" className="font-semibold text-primary hover:underline" onClick={() => setAuthAction('signup')}>
@@ -124,7 +105,7 @@ export default function AuthForm() {
             </CardContent>
         </div>
 
-        <div className={cn("transition-all duration-500", authAction === 'signup' ? 'opacity-100 visible' : 'opacity-0 invisible absolute')}>
+        <div className={cn("transition-all duration-500 absolute w-full", authAction === 'signup' ? 'opacity-100' : 'opacity-0 translate-x-full')}>
             <CardHeader className="text-center">
                 <CardTitle>Create an Account</CardTitle>
                 <CardDescription>
