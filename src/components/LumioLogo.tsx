@@ -1,5 +1,16 @@
 export function LumioLogo() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary"><path d="M15 12h2a2 2 0 1 0 0-4h-2v4Z"/><path d="M15 12h2a2 2 0 1 0 0-4h-2v4Z"/><path d="M12 12H8a2 2 0 1 1 0-4h4v4Z"/><path d="m9 16 3-3"/><path d="M14 16v-1a2 2 0 0 1 2-2h2"/><path d="M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z"/></svg>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 24"
+      className="h-6 w-auto text-primary"
+      fill="currentColor"
+    >
+      <path d="M13.2 2.6H8.5v18.8h4.7v-7.3h2.3c3.4 0 6.1-2.7 6.1-6.1s-2.7-6.1-6.1-6.1h-2.3v.7zm2.3 9.8h-2.3V5.1h2.3c1.9 0 3.5 1.6 3.5 3.5s-1.6 3.8-3.5 3.8z" />
+      <path d="M37.8 2.6h-4.7v18.8h4.7V2.6z" />
+      <path d="M49.2 21.4h-4.7V2.6h4.7v18.8z" />
+      <path d="M68.5 12c0-5.2-4.2-9.4-9.4-9.4s-9.4 4.2-9.4 9.4 4.2 9.4 9.4 9.4 9.4-4.2 9.4-9.4zm-14.1 0c0-2.6 2.1-4.7 4.7-4.7s4.7 2.1 4.7 4.7-2.1 4.7-4.7 4.7-4.7-2.1-4.7-4.7z" />
+      <path d="M84.2 21.4L78.6 2.6h5.3l3.2 11.2 3.2-11.2h5.3L90 21.4h-4.8l-1-3.6h-5.4l-1 3.6h-4.8zm-1-6.2l2-7.2 2 7.2h-4z" />
+    </svg>
   );
 }
