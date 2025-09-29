@@ -82,11 +82,12 @@ const prompt = ai.definePrompt({
   
   Instructions:
   1.  Analyze the student's profile and historical performance to identify the biggest areas for improvement among the four fundamentals.
-  2.  Generate questions that specifically target these weak areas. For example, if a student has a low average score in "Application", create more application-based problems.
-  3.  The difficulty level should be adaptive. If a student is struggling in a category, generate more 'easy' or 'medium' questions for it. If they are excelling, introduce 'hard' questions.
-  4.  The category for each question MUST be one of "Listening", "Grasping", "Retention", or "Application".
-  5.  Each question must have 4 multiple-choice options, with only one correct answer.
-  6.  Provide a clear explanation for the correct answer.
+  2.  **IMPORTANT**: Use the student's learning context (education stream, interests) to frame the questions. For example, if the student is interested in space, a math problem could be about calculating orbital speeds.
+  3.  Generate questions that specifically target these weak areas. For example, if a student has a low average score in "Application", create more application-based problems.
+  4.  The difficulty level should be adaptive. If a student is struggling in a category, generate more 'easy' or 'medium' questions for it. If they are excelling, introduce 'hard' questions.
+  5.  The category for each question MUST be one of "Listening", "Grasping", "Retention", or "Application".
+  6.  Each question must have 4 multiple-choice options, with only one correct answer.
+  7.  Provide a clear explanation for the correct answer.
   
   Output ONLY valid JSON. DO NOT include any other text.`,
 });

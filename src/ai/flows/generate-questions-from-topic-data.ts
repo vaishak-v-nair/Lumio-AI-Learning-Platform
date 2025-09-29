@@ -76,8 +76,9 @@ const dataDrivenPrompt = ai.definePrompt({
       - No performance history available.
     {{/if}}
 
-    Use the following structured data to create questions that test a student's understanding across the four fundamentals.
+    Use the following structured data to create questions. **IMPORTANT**: Use the user's learning context (education stream, interests) to frame the questions. For example, if the topic is 'Percentages' and the user is interested in biology, frame a question around population growth rates.
 
+    Topic Data for '{{{topic}}}':
     Concepts:
     {{#each topicData.concepts}}
     - {{name}}: {{explanation}}

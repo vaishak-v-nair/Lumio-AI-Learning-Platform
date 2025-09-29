@@ -85,10 +85,10 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
               </CardHeader>
               <CardContent className="space-y-6">
                   <div className="space-y-2">
-                      <Label htmlFor="learning-context">Describe your learning context and goals</Label>
+                      <Label htmlFor="learning-context">Describe your learning goals, education stream, and interests.</Label>
                       <Textarea
                           id="learning-context"
-                          placeholder="e.g., I'm an 8th-grade student preparing for my science exams. I love physics but struggle with math concepts. I learn best with visual examples and real-world problems."
+                          placeholder="e.g., I'm a 10th-grade student in the science stream, preparing for board exams. I love space and astrophysics, so physics problems related to that are more interesting to me. I struggle with remembering historical dates."
                           className="min-h-[120px] text-base"
                           value={learningContext}
                           onChange={(e) => setLearningContext(e.target.value)}
