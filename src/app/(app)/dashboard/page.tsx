@@ -15,7 +15,6 @@ import { generatePersonalizedTest } from "@/ai/flows/generate-personalized-test"
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useTestResult } from "@/context/TestResultContext";
-import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
 type ViewState = 'loading' | 'onboarding' | 'dashboard' | 'testing' | 'results';
 
@@ -24,7 +23,6 @@ export default function DashboardPage() {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [currentTest, setCurrentTest] = useState<any>(null);
     const [latestTestResult, setLatestTestResult] = useState<TestResult | null>(null);
-    const [showTour, setShowTour] = useState(false);
     const { toast } = useToast();
     const { refreshResult } = useTestResult();
 
@@ -40,10 +38,6 @@ export default function DashboardPage() {
             setUserProfile(profile);
             if (profile) {
                 setView('dashboard');
-                const hasSeenTour = localStorage.getItem('hasSeenOnboardingTour');
-                if (!hasSeenTour) {
-                    setShowTour(true);
-                }
             } else {
                 setView('onboarding');
             }
@@ -56,8 +50,12 @@ export default function DashboardPage() {
             await createUserProfile(profile);
             localStorage.setItem('onboardingComplete', 'true');
             setUserProfile(profile);
-            setView('dashboard');
-            setShowTour(true);
+            
+            toast({
+                title: "Let's Get Started!",
+                description: "We're creating a personalized test to get you started.",
+            });
+            handleStartTest('personalized-test');
 
         } catch (error) {
             console.error('Onboarding failed:', error);
@@ -103,16 +101,6 @@ export default function DashboardPage() {
         setView('results');
     };
     
-    const handleTourFinish = () => {
-        setShowTour(false);
-        localStorage.setItem('hasSeenOnboardingTour', 'true');
-        toast({
-            title: "Let's Get Started!",
-            description: "We're creating a personalized test to get you started.",
-        });
-        handleStartTest('personalized-test');
-    };
-
     const handleBackToDashboard = () => {
         setLatestTestResult(null);
         setCurrentTest(null);
@@ -141,8 +129,7 @@ export default function DashboardPage() {
 
     return (
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-            {showTour && <OnboardingTour onFinish={handleTourFinish} />}
-          <div id="tour-step-1" className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
             <Card>
                  <CardHeader>
                     <CardTitle>Start a New Test</CardTitle>
@@ -195,13 +182,13 @@ export default function DashboardPage() {
                 </CardContent>
             </Card>
             
-            <div id="tour-step-3">
+            <div>
               <LearningRecommendations />
             </div>
 
           </div>
           <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-            <div id="tour-step-2">
+            <div>
               <ProgressOverview />
             </div>
             <Achievements />
