@@ -11,9 +11,10 @@ import {
   doc,
   getDoc,
   setDoc,
+  updateDoc,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
-import type { GeneratePersonalizedTestOutput } from '@/ai/flows/generate-personalized-test';
+import type { GeneratePersonalizedTestOutput, Question } from '@/ai/flows/generate-personalized-test';
 
 export interface TestResult {
   userId: string;
@@ -26,11 +27,28 @@ export interface TestResult {
   topic: string;
 }
 
+export interface AggregatedPerformance {
+    [category: string]: {
+        totalQuestions: number;
+        correctAnswers: number;
+        averageScore: number;
+    };
+}
+
+export interface PerformanceHistory {
+    testId: string;
+    topic: string;
+    score: number;
+    date: string;
+}
+
 export interface UserProfile {
   userId: string;
   learningContext?: string;
   createdAt?: string;
   bio?: string;
+  performanceHistory?: PerformanceHistory[];
+  aggregatedPerformance?: AggregatedPerformance;
 }
 
 export interface TopicData {
@@ -48,11 +66,54 @@ export interface TopicData {
 
 export const saveTestResult = async (result: TestResult) => {
   try {
+    // 1. Save the full test result
     const docRef = await addDoc(collection(firestore, 'testResults'), result);
-    console.log('Document written with ID: ', docRef.id);
+    console.log('Test result saved with ID: ', docRef.id);
+
+    // 2. Update the user's profile with aggregated data
+    const userProfile = await getUserProfile(result.userId);
+    if (userProfile) {
+        const userDocRef = doc(firestore, 'users', result.userId);
+
+        // Initialize or update performance history
+        const newHistoryEntry: PerformanceHistory = {
+            testId: result.testId,
+            topic: result.topic,
+            score: result.score,
+            date: result.date,
+        };
+        const updatedHistory = [...(userProfile.performanceHistory || []), newHistoryEntry];
+
+        // Initialize or update aggregated performance
+        const updatedAggregatedPerformance = userProfile.aggregatedPerformance || {};
+        result.questions.forEach((q, index) => {
+            const category = q.category;
+            if (!updatedAggregatedPerformance[category]) {
+                updatedAggregatedPerformance[category] = {
+                    totalQuestions: 0,
+                    correctAnswers: 0,
+                    averageScore: 0,
+                };
+            }
+            const stats = updatedAggregatedPerformance[category];
+            stats.totalQuestions += 1;
+            if (result.answers[index] === q.correctAnswerIndex) {
+                stats.correctAnswers += 1;
+            }
+            stats.averageScore = (stats.correctAnswers / stats.totalQuestions) * 100;
+        });
+
+        await updateDoc(userDocRef, {
+            performanceHistory: updatedHistory,
+            aggregatedPerformance: updatedAggregatedPerformance,
+        });
+
+        console.log(`User profile updated for ${result.userId}`);
+    }
+
     return docRef.id;
   } catch (e) {
-    console.error('Error adding document: ', e);
+    console.error('Error adding document or updating profile: ', e);
     return null;
   }
 };

@@ -12,13 +12,14 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { getTopicData } from '@/lib/server/firestore';
-import type { TopicData } from '@/lib/firestore';
+import { getUserProfile, type TopicData, type UserProfile } from '@/lib/firestore';
 import { generatePersonalizedTest } from './generate-personalized-test';
 
 
 const GenerateQuestionsFromTopicDataInputSchema = z.object({
   topic: z.string().describe('The topic to generate questions for.'),
   numberOfQuestions: z.number().describe('The number of questions to generate.'),
+  userId: z.string().describe('The ID of the user taking the test.'),
 });
 export type GenerateQuestionsFromTopicDataInput = z.infer<typeof GenerateQuestionsFromTopicDataInputSchema>;
 
@@ -48,12 +49,26 @@ const dataDrivenPrompt = ai.definePrompt({
     input: { schema: z.object({
         topic: z.string(),
         numberOfQuestions: z.number(),
-        topicData: z.custom<TopicData>()
+        topicData: z.custom<TopicData>(),
+        userProfile: z.custom<UserProfile>().optional(),
     })},
     output: { schema: GenerateQuestionsFromTopicDataOutputSchema },
-    prompt: `You are an expert test generator. Your task is to create a set of questions for the topic '{{{topic}}}' based on the structured data provided.
+    prompt: `You are an expert test generator. Your task is to create a set of questions for the topic '{{{topic}}}' based on the structured data provided and the user's past performance (RAG).
 
     You must generate {{{numberOfQuestions}}} questions.
+
+    User Profile & Performance Data (RAG):
+    {{#if userProfile.learningContext}}
+    - Context: {{{userProfile.learningContext}}}
+    {{/if}}
+    {{#if userProfile.aggregatedPerformance}}
+      {{#each userProfile.aggregatedPerformance}}
+      - In '{{@key}}', the student's historical accuracy is {{averageScore}}%.
+      {{/each}}
+      Focus on generating more questions for categories with lower scores.
+    {{else}}
+      - No performance history available.
+    {{/if}}
 
     Use the following concepts and examples to create questions that test a student's understanding in the categories of "Grasping", "Retention", and "Application".
 
@@ -71,8 +86,8 @@ const dataDrivenPrompt = ai.definePrompt({
     For each question, provide:
     - 4 multiple-choice options, with only one correct answer.
     - An explanation for the correct answer.
-    - A difficulty rating ('easy', 'medium', 'hard').
-    - A category ('Grasping', 'Retention', 'Application').
+    - An adaptive difficulty rating ('easy', 'medium', 'hard') based on the user's performance.
+    - A category ('Grasping', 'Retention', 'Application') that targets a weak area if possible.
 
     Output ONLY valid JSON. DO NOT include any other text.
     `,
@@ -86,7 +101,10 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
   },
   async (input) => {
     console.log(`Attempting to fetch data for topic: ${input.topic}`);
-    const topicData = await getTopicData(input.topic);
+    const [topicData, userProfile] = await Promise.all([
+        getTopicData(input.topic),
+        getUserProfile(input.userId),
+    ]);
 
     if (!topicData) {
         // Fallback to the generic generator if no specific data is found for the topic
@@ -94,12 +112,14 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
         return generatePersonalizedTest({
             weakAreas: 'Grasping, Retention, Application',
             numberOfQuestions: input.numberOfQuestions,
+            learningContext: userProfile?.learningContext,
+            aggregatedPerformance: userProfile?.aggregatedPerformance,
         });
     }
 
     console.log(`Successfully fetched data for '${input.topic}'. Generating questions using data-driven prompt.`);
     try {
-        const llmResponse = await dataDrivenPrompt({ ...input, topicData });
+        const llmResponse = await dataDrivenPrompt({ ...input, topicData, userProfile: userProfile || undefined });
         const output = llmResponse.output;
 
         if (!output) {
@@ -116,6 +136,8 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
         return generatePersonalizedTest({
             weakAreas: 'Grasping, Retention, Application',
             numberOfQuestions: input.numberOfQuestions,
+            learningContext: userProfile?.learningContext,
+            aggregatedPerformance: userProfile?.aggregatedPerformance,
         });
     }
   }

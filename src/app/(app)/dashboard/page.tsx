@@ -25,16 +25,18 @@ export default function DashboardPage() {
     const [latestTestResult, setLatestTestResult] = useState<TestResult | null>(null);
     const { toast } = useToast();
     const { refreshResult } = useTestResult();
+    const [userName, setUserName] = useState<string | null>(null);
 
     useEffect(() => {
         const checkUser = async () => {
-            const userName = localStorage.getItem('userName');
-            if (!userName) {
+            const storedUserName = localStorage.getItem('userName');
+            if (!storedUserName) {
                 window.location.href = '/';
                 return;
             }
+            setUserName(storedUserName);
             
-            const profile = await getUserProfile(userName);
+            const profile = await getUserProfile(storedUserName);
             setUserProfile(profile);
             if (profile) {
                 setView('dashboard');
@@ -55,7 +57,10 @@ export default function DashboardPage() {
                 title: "Let's Get Started!",
                 description: "We're creating a personalized test to get you started.",
             });
-            handleStartTest('Personalized Test');
+            
+            if (profile.userId) {
+                handleStartTest('Personalized Test', profile.userId);
+            }
 
         } catch (error) {
             console.error('Onboarding failed:', error);
@@ -68,12 +73,13 @@ export default function DashboardPage() {
         }
     };
     
-    const handleStartTest = async (topic: string) => {
+    const handleStartTest = async (topic: string, userId: string) => {
         setView('loading');
         try {
             const testData = await generateQuestionsFromTopicData({
                 topic: topic,
                 numberOfQuestions: 5,
+                userId: userId
             });
             
             const testId = crypto.randomUUID();
@@ -106,7 +112,7 @@ export default function DashboardPage() {
         setView('dashboard');
     }
 
-    if (view === 'loading') {
+    if (view === 'loading' || !userName) {
         return (
             <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -138,7 +144,7 @@ export default function DashboardPage() {
                     <p className="my-6 text-sm text-muted-foreground">
                         Our AI will generate a personalized test to help you focus on what matters most.
                     </p>
-                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('Personalized Test')}>
+                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('Personalized Test', userName)}>
                         Start Personalized Test
                     </Button>
                 </CardContent>
@@ -159,7 +165,7 @@ export default function DashboardPage() {
                                     View Report
                                 </Button>
                             </Link>
-                             <Button className="rounded-full" onClick={() => handleStartTest('Time & Distance')}>
+                             <Button className="rounded-full" onClick={() => handleStartTest('Time & Distance', userName)}>
                                 Start Test
                             </Button>
                         </div>
@@ -173,7 +179,7 @@ export default function DashboardPage() {
                                     View Report
                                 </Button>
                             </Link>
-                             <Button className="rounded-full" onClick={() => handleStartTest('Percentages')}>
+                             <Button className="rounded-full" onClick={() => handleStartTest('Percentages', userName)}>
                                 Start Test
                             </Button>
                         </div>

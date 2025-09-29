@@ -11,6 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
+import type { AggregatedPerformance } from '@/lib/firestore';
 
 const GeneratePersonalizedTestInputSchema = z.object({
   weakAreas: z
@@ -22,6 +23,7 @@ const GeneratePersonalizedTestInputSchema = z.object({
     .number()
     .describe('The number of questions to generate for the test.'),
   learningContext: z.string().optional().describe('Free-form text describing the user, including their education level, academic stream, interests, and learning style.'),
+  aggregatedPerformance: z.custom<AggregatedPerformance>().optional().describe('The student\'s historical performance data.'),
 });
 export type GeneratePersonalizedTestInput = z.infer<
   typeof GeneratePersonalizedTestInputSchema
@@ -56,20 +58,31 @@ const prompt = ai.definePrompt({
   name: 'generatePersonalizedTestPrompt',
   input: {schema: GeneratePersonalizedTestInputSchema},
   output: {schema: GeneratePersonalizedTestOutputSchema},
-  prompt: `You are an expert test generator. You will generate a test for a student based on their profile and weak areas.
+  prompt: `You are an expert test generator. You will generate a test for a student based on their profile, weak areas, and past performance. This is a form of Retrieval-Augmented Generation (RAG).
 
   Student Profile:
   - Learning Context: {{{learningContext}}}
+  - Identified Weak Areas: {{{weakAreas}}}
 
-  Weak Areas: {{{weakAreas}}}
+  Historical Performance (RAG Data):
+  {{#if aggregatedPerformance}}
+    {{#each aggregatedPerformance}}
+    - In '{{@key}}', the student has answered {{correctAnswers}} out of {{totalQuestions}} questions correctly ({{averageScore}}%).
+    {{/each}}
+  {{else}}
+    - No historical performance data available. This is their first test.
+  {{/if}}
+  
   Number of Questions: {{{numberOfQuestions}}}
   
-  Please generate questions that are relevant to the student's profile. For example, for a student in 8th Grade Science interested in Math, create age-appropriate questions related to their interests.
-  Each question should have 4 options. One and only one should be correct.
-  Include an explanation of the correct answer.
-  Dynamically configure the scoring logic for each generated question.
-  The difficulty level should be adjusted according to the weak area, starting with 'easy' for an initial test.
-  The category should match a weak area and be one of "Listening", "Grasping", "Retention", or "Application".
+  Instructions:
+  1.  Analyze the student's profile and historical performance to identify the biggest areas for improvement.
+  2.  Generate questions that specifically target these weak areas. For example, if a student has a low average score in "Application", create more application-based problems.
+  3.  The difficulty level should be adaptive. If a student is struggling in a category, generate more 'easy' or 'medium' questions for it. If they are excelling, introduce 'hard' questions.
+  4.  The category for each question must match one of the student's weak areas (e.g., "Grasping", "Retention", "Application").
+  5.  Each question must have 4 multiple-choice options, with only one correct answer.
+  6.  Provide a clear explanation for the correct answer.
+  
   Output ONLY valid JSON. DO NOT include any other text.`,
 });
 
