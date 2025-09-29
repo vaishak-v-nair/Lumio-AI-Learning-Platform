@@ -43,6 +43,7 @@ export default function MultiStepForm() {
     }
 
     try {
+      // 1. Store user details in Firestore
       await createUserProfile({
         userId: userName,
         userDetails: userDetails,
@@ -50,12 +51,14 @@ export default function MultiStepForm() {
       });
       localStorage.setItem('onboardingComplete', 'true');
 
+      // 2. Generate a personalized test using the AI flow
       const testData = await generatePersonalizedTest({
         userDetails: userDetails,
         weakAreas: 'Grasping,Retention,Application', // Initial test covers all areas
         numberOfQuestions: 5,
       });
 
+      // 3. Store the generated test in session storage
       const testId = crypto.randomUUID();
       const topic = 'personalized-test'; // Generic topic for initial test
       sessionStorage.setItem(`test_${testId}`, JSON.stringify({ ...testData, topic }));
@@ -64,6 +67,7 @@ export default function MultiStepForm() {
         title: 'Profile created!',
         description: "We've created a personalized test to get you started.",
       });
+      // 4. Redirect to the test
       router.push(`/test/${testId}`);
     } catch (error) {
       console.error('Onboarding failed:', error);

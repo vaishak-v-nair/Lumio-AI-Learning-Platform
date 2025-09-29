@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { getUserProfile } from '@/lib/firestore';
 
 export default function AuthForm() {
   const router = useRouter();
@@ -28,35 +30,38 @@ export default function AuthForm() {
     setIsClient(true);
   }, []);
 
-  const handleAuthAction = (e: React.FormEvent, action: 'login' | 'signup' | 'guest') => {
+  const handleAuthAction = async (e: React.FormEvent, action: 'login' | 'signup' | 'guest') => {
     e.preventDefault();
     if (!isClient) return;
 
     setIsLoading(true);
 
     // Simulate network delay
-    setTimeout(() => {
-      const isSignup = action === 'signup';
-      const onboardingComplete = localStorage.getItem('onboardingComplete');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    const isSignup = action === 'signup';
+    
+    if (isSignup) {
+      toast({
+          title: 'Account Created',
+          description: 'You have successfully signed up. Please log in.',
+      });
+      setActiveTab('login');
+      setIsLoading(false);
+    } else {
+      const name = action === 'guest' ? 'Guest' : email.split('@')[0];
+      localStorage.setItem('userName', name);
       
-      if (isSignup) {
-        toast({
-            title: 'Account Created',
-            description: 'You have successfully signed up. Please log in.',
-        });
-        setActiveTab('login');
-        setIsLoading(false);
+      // Check if user has completed onboarding
+      const profile = await getUserProfile(name);
+
+      if (profile) {
+          localStorage.setItem('onboardingComplete', 'true');
+          router.push('/dashboard');
       } else {
-        const name = action === 'guest' ? 'Guest' : email.split('@')[0];
-        localStorage.setItem('userName', name);
-        
-        if (onboardingComplete) {
-            router.push('/dashboard');
-        } else {
-            router.push('/onboarding');
-        }
+          router.push('/onboarding');
       }
-    }, 1500);
+    }
   };
 
   return (

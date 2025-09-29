@@ -174,7 +174,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <div className="flex flex-1 items-center justify-center">
               </div>
             </header>
-            <main className="flex flex-1 items-center justify-center">
+            <main className="flex-1 flex items-center justify-center">
                 <div className="w-full max-w-4xl p-4 sm:p-6">
                   {children}
                 </div>
