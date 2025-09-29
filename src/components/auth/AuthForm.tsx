@@ -24,6 +24,7 @@ export default function AuthForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -39,9 +40,18 @@ export default function AuthForm() {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const isSignup = action === 'signup';
-    
-    if (isSignup) {
+    if (action === 'signup') {
+        const existingProfile = await getUserProfile(username);
+        if (existingProfile) {
+            toast({
+                variant: 'destructive',
+                title: 'Username Taken',
+                description: 'This username is already in use. Please choose another one.',
+            });
+            setIsLoading(false);
+            return;
+        }
+
       toast({
           title: 'Account Created',
           description: 'You have successfully signed up. Please log in.',
@@ -109,6 +119,10 @@ export default function AuthForm() {
           </CardHeader>
           <CardContent>
             <form onSubmit={(e) => handleAuthAction(e, 'signup')} className="space-y-4">
+              <div className="space-y-2">
+                  <Label htmlFor="username-signup">Username</Label>
+                  <Input id="username-signup" type="text" placeholder="your_username" required value={username} onChange={(e) => setUsername(e.target.value)} />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email-signup">Email</Label>
                 <Input id="email-signup" type="email" placeholder="m@example.com" required />
