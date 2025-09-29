@@ -36,7 +36,10 @@ export default function AuthForm() {
 
     // Simulate network delay
     setTimeout(() => {
-      if (action === 'signup') {
+      const isSignup = action === 'signup';
+      const onboardingComplete = localStorage.getItem('onboardingComplete');
+      
+      if (isSignup) {
         toast({
             title: 'Account Created',
             description: 'You have successfully signed up. Please log in.',
@@ -46,7 +49,12 @@ export default function AuthForm() {
       } else {
         const name = action === 'guest' ? 'Guest' : email.split('@')[0];
         localStorage.setItem('userName', name);
-        router.push('/dashboard');
+        
+        if (onboardingComplete) {
+            router.push('/dashboard');
+        } else {
+            router.push('/onboarding');
+        }
       }
     }, 1500);
   };

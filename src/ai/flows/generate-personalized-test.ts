@@ -20,6 +20,9 @@ const GeneratePersonalizedTestInputSchema = z.object({
   numberOfQuestions: z
     .number()
     .describe('The number of questions to generate for the test.'),
+  educationLevel: z.string().optional().describe('The education level of the student (e.g., 8th Grade).'),
+  stream: z.string().optional().describe('The academic stream of the student (e.g., Science).'),
+  interests: z.string().optional().describe('The student\'s areas of interest (e.g., Math, Literature).'),
 });
 export type GeneratePersonalizedTestInput = z.infer<
   typeof GeneratePersonalizedTestInputSchema
@@ -54,17 +57,22 @@ const prompt = ai.definePrompt({
   name: 'generatePersonalizedTestPrompt',
   input: {schema: GeneratePersonalizedTestInputSchema},
   output: {schema: GeneratePersonalizedTestOutputSchema},
-  prompt: `You are an expert test generator. You will generate a test for a student based on their weak areas.
+  prompt: `You are an expert test generator. You will generate a test for a student based on their profile and weak areas.
+
+  Student Profile:
+  - Education Level: {{{educationLevel}}}
+  - Academic Stream: {{{stream}}}
+  - Interests: {{{interests}}}
 
   Weak Areas: {{{weakAreas}}}
   Number of Questions: {{{numberOfQuestions}}}
-
+  
+  Please generate questions that are relevant to the student's profile. For example, for a student in 8th Grade Science, create age-appropriate questions related to their interests.
   Each question should have 4 options. One and only one should be correct.
   Include an explanation of the correct answer.
   Dynamically configure the scoring logic for each generated question.
-  The difficulty level should be adjusted according to the weak area, such as "easy", "medium", or "hard".
-  The category should match the weak area and be one of "Listening", "Grasping", "Retention", or "Application".
-  For the "Time & Distance" topic, create questions for each of these categories.
+  The difficulty level should be adjusted according to the weak area, starting with 'easy' for an initial test.
+  The category should match a weak area and be one of "Listening", "Grasping", "Retention", or "Application".
   Output ONLY valid JSON. DO NOT include any other text.`,
 });
 

@@ -8,29 +8,40 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { LumioLogo } from "@/components/LumioLogo";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { TestResultProvider } from "@/context/TestResultContext";
+import { getUserProfile } from "@/lib/firestore";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const [userName, setUserName] = useState("Guest");
   const [userAvatar, setUserAvatar] = useState(`https://picsum.photos/seed/Guest/32/32`);
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
     const storedName = localStorage.getItem('userName');
     if (storedName) {
       setUserName(storedName);
+       // Check if user has completed onboarding
+      getUserProfile(storedName).then(profile => {
+        if (!profile && pathname !== '/onboarding') {
+          router.push('/onboarding');
+        }
+      });
+    } else {
+        router.push('/');
     }
+    
     const storedAvatar = localStorage.getItem('userAvatar');
     if (storedAvatar) {
       setUserAvatar(storedAvatar);
     } else if (storedName) {
       setUserAvatar(`https://picsum.photos/seed/${storedName}/32/32`);
     }
-  }, []);
+  }, [pathname, router]);
 
   const handleLogout = () => {
     localStorage.removeItem('userName');
@@ -156,7 +167,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </SidebarFooter>
           </Sidebar>
           <SidebarInset>
-            <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6">
+            <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm sm:px-6 md:justify-end">
               <div className="flex items-center gap-4 md:hidden">
                   <SidebarTrigger />
               </div>

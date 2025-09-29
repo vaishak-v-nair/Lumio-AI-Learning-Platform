@@ -9,6 +9,7 @@ import {
   limit,
   doc,
   getDoc,
+  setDoc,
 } from 'firebase/firestore';
 import { firestore } from '@/lib/firebase';
 import type { GeneratePersonalizedTestOutput } from '@/ai/flows/generate-personalized-test';
@@ -22,6 +23,14 @@ export interface TestResult {
   testId: string;
   date: string;
   topic: string;
+}
+
+export interface UserProfile {
+  userId: string;
+  educationLevel: string;
+  stream: string;
+  interests: string;
+  createdAt: string;
 }
 
 export interface TopicData {
@@ -100,3 +109,28 @@ export const getTopicDataDoc = async (topic: string): Promise<TopicData | null> 
     return null;
   }
 };
+
+export const createUserProfile = async (profile: UserProfile): Promise<boolean> => {
+  try {
+    await setDoc(doc(firestore, 'users', profile.userId), profile);
+    console.log(`User profile created for ${profile.userId}`);
+    return true;
+  } catch (e) {
+    console.error('Error creating user profile: ', e);
+    return false;
+  }
+};
+
+export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
+    try {
+        const docRef = doc(firestore, 'users', userId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as UserProfile;
+        }
+        return null;
+    } catch (e) {
+        console.error('Error getting user profile: ', e);
+        return null;
+    }
+}
