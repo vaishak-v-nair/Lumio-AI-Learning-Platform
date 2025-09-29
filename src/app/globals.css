@@ -83,3 +83,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+    .animate-fade-in-up {
+        animation: fade-in-up 0.5s ease-out forwards;
+    }
+    .animate-gradient {
+        animation: gradient 15s ease infinite;
+        background-size: 400% 400%;
+    }
+}
