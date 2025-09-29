@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/achievements", label: "Achievements" },
-    { href: "/story/sanga", label: "Sanga's Story" },
+    { href: "/story/sanga", label: "Story" },
     { href: "/parent/dashboard", label: "Parent View" },
     { href: "/teacher/dashboard", label: "Teacher View" },
 ];
