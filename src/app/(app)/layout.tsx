@@ -16,9 +16,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
     { href: "/achievements", label: "Achievements", icon: <Trophy className="h-5 w-5" /> },
-    { href: "/story/sanga", label: "Story", icon: <BookOpen className="h-5 w-5" /> },
     { href: "/parent/dashboard", label: "Parent View", icon: <Users className="h-5 w-5" /> },
     { href: "/teacher/dashboard", label: "Teacher View", icon: <School className="h-5 w-5" /> },
+    { href: "/story/sanga", label: "Story", icon: <BookOpen className="h-5 w-5" /> },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
