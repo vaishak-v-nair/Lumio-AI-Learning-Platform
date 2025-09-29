@@ -1,7 +1,7 @@
 
 "use client";
 import type { ReactNode } from "react";
-import { LogOut, User, Settings } from "lucide-react";
+import { LogOut, User, Settings, LayoutDashboard, Trophy, BookOpen, Users, School } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,11 +14,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-    { href: "/dashboard", label: "Dashboard" },
-    { href: "/achievements", label: "Achievements" },
-    { href: "/story/sanga", label: "Story" },
-    { href: "/parent/dashboard", label: "Parent View" },
-    { href: "/teacher/dashboard", label: "Teacher View" },
+    { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
+    { href: "/achievements", label: "Achievements", icon: <Trophy className="h-5 w-5" /> },
+    { href: "/story/sanga", label: "Story", icon: <BookOpen className="h-5 w-5" /> },
+    { href: "/parent/dashboard", label: "Parent View", icon: <Users className="h-5 w-5" /> },
+    { href: "/teacher/dashboard", label: "Teacher View", icon: <School className="h-5 w-5" /> },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -92,12 +92,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </Link>
             {navItems.map((item) => (
                 <Link key={item.href} href={item.href} 
-                    className={cn("relative font-semibold transition-colors hover:text-primary",
+                    className={cn("relative flex items-center gap-2 font-semibold transition-colors hover:text-primary",
                     pathname === item.href ? "text-primary" : "text-muted-foreground",
                     "after:absolute after:bottom-[-2px] after:left-0 after:h-[2px] after:w-full after:bg-primary after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100",
                     pathname === item.href && "after:scale-x-100"
                     )}
                 >
+                    {item.icon}
                     {item.label}
                 </Link>
             ))}
