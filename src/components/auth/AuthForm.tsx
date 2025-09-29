@@ -18,9 +18,23 @@ import { Loader2 } from 'lucide-react';
 import { getUserProfile, createUserProfile } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendSignInLinkToEmail } from 'firebase/auth';
 
 type AuthAction = 'login' | 'signup';
+
+const actionCodeSettings = {
+  url: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
+  handleCodeInApp: true,
+  iOS: {
+    bundleId: 'com.example.ios'
+  },
+  android: {
+    packageName: 'com.example.android',
+    installApp: true,
+    minimumVersion: '12'
+  },
+  dynamicLinkDomain: process.env.NEXT_PUBLIC_DYNAMIC_LINK_DOMAIN
+};
 
 export default function AuthForm() {
   const router = useRouter();
@@ -81,6 +95,14 @@ export default function AuthForm() {
             const user = userCredential.user;
             await updateProfile(user, { displayName: username });
             
+            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+            window.localStorage.setItem('emailForSignIn', email);
+
+            toast({
+                title: 'Verification Email Sent',
+                description: 'A sign-in link has been sent to your email address.',
+            });
+
             // We will create the profile after the onboarding step.
             // await createUserProfile({ userId: username });
 
@@ -178,7 +200,7 @@ export default function AuthForm() {
                 <form onSubmit={handleAuthAction} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="username-signup">Username</Label>
-                    <Input id="username-signup" type="text" placeholder="your_username" required value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <Input id="username-signup" type="text" placeholder="your_username" required value={username} onChange={(e) => setUsername(e.targe
                     {usernameError && <p className="text-xs text-destructive">{usernameError}</p>}
                 </div>
                 <div className="space-y-2">
