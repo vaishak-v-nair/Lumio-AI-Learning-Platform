@@ -37,7 +37,7 @@ const QuestionSchema = z.object({
     .describe('The index of the correct answer in the options array.'),
   explanation: z.string().describe('Explanation of the correct answer.'),
   difficulty: z.enum(['easy', 'medium', 'hard']).describe('Difficulty level'),
-  category: z.string().describe('The category of the question, should be one of "Listening", "Grasping", "Retention", or "Application"'),
+  category: z.enum(['Listening', 'Grasping', 'Retention', 'Application']).describe('The category of the question, which must be one of "Listening", "Grasping", "Retention", or "Application".'),
 });
 
 const GeneratePersonalizedTestOutputSchema = z.object({
@@ -58,8 +58,13 @@ const prompt = ai.definePrompt({
   name: 'generatePersonalizedTestPrompt',
   input: {schema: GeneratePersonalizedTestInputSchema},
   output: {schema: GeneratePersonalizedTestOutputSchema},
-  prompt: `You are an expert test generator. You will generate a test for a student based on their profile, weak areas, and past performance. This is a form of Retrieval-Augmented Generation (RAG).
+  prompt: `You are an expert test generator. Your goal is to create a diagnostic test to understand *why* a student is struggling. You will generate questions that assess four key learning fundamentals: "Listening", "Grasping", "Retention", and "Application".
 
+  - "Listening": Can the student accurately comprehend the details and constraints of a question? (e.g., questions with specific conditions, units, or negative phrasing).
+  - "Grasping": Does the student understand the core definition or concept? (e.g., direct "What is X?" questions).
+  - "Retention": Can the student recall facts or formulas? (e.g., questions asking to identify a specific formula or historical date).
+  - "Application": Can the student apply a concept to solve a problem? (e.g., word problems, multi-step calculations).
+  
   Student Profile:
   - Learning Context: {{{learningContext}}}
   - Identified Weak Areas: {{{weakAreas}}}
@@ -76,10 +81,10 @@ const prompt = ai.definePrompt({
   Number of Questions: {{{numberOfQuestions}}}
   
   Instructions:
-  1.  Analyze the student's profile and historical performance to identify the biggest areas for improvement.
+  1.  Analyze the student's profile and historical performance to identify the biggest areas for improvement among the four fundamentals.
   2.  Generate questions that specifically target these weak areas. For example, if a student has a low average score in "Application", create more application-based problems.
   3.  The difficulty level should be adaptive. If a student is struggling in a category, generate more 'easy' or 'medium' questions for it. If they are excelling, introduce 'hard' questions.
-  4.  The category for each question must match one of the student's weak areas (e.g., "Grasping", "Retention", "Application").
+  4.  The category for each question MUST be one of "Listening", "Grasping", "Retention", or "Application".
   5.  Each question must have 4 multiple-choice options, with only one correct answer.
   6.  Provide a clear explanation for the correct answer.
   

@@ -29,7 +29,7 @@ const QuestionSchema = z.object({
   correctAnswerIndex: z.number().describe('The index of the correct answer in the options array.'),
   explanation: z.string().describe('Explanation of the correct answer.'),
   difficulty: z.enum(['easy', 'medium', 'hard']).describe('Difficulty level'),
-  category: z.string().describe('The category of the question, should be one of "Listening", "Grasping", "Retention", or "Application"'),
+  category: z.enum(['Listening', 'Grasping', 'Retention', 'Application']).describe('The category of the question, which must be one of "Listening", "Grasping", "Retention", or "Application".'),
 });
 
 const GenerateQuestionsFromTopicDataOutputSchema = z.object({
@@ -53,9 +53,15 @@ const dataDrivenPrompt = ai.definePrompt({
         userProfile: z.custom<UserProfile>().optional(),
     })},
     output: { schema: GenerateQuestionsFromTopicDataOutputSchema },
-    prompt: `You are an expert test generator. Your task is to create a set of questions for the topic '{{{topic}}}' based on the structured data provided and the user's past performance (RAG).
+    prompt: `You are an expert test generator. Your task is to create a set of questions for the topic '{{{topic}}}' based on the structured data provided and the user's past performance (RAG). Your goal is to diagnose *why* a student is struggling by assessing four key learning fundamentals.
 
     You must generate {{{numberOfQuestions}}} questions.
+
+    The Four Learning Fundamentals:
+    - "Listening": Can the student accurately comprehend the details and constraints of a question? (e.g., questions with specific conditions, units, or negative phrasing).
+    - "Grasping": Does the student understand the core definition or concept? (e.g., direct "What is X?" questions).
+    - "Retention": Can the student recall facts or formulas? (e.g., questions asking to identify a specific formula or historical date).
+    - "Application": Can the student apply a concept to solve a problem? (e.g., word problems, multi-step calculations).
 
     User Profile & Performance Data (RAG):
     {{#if userProfile.learningContext}}
@@ -70,7 +76,7 @@ const dataDrivenPrompt = ai.definePrompt({
       - No performance history available.
     {{/if}}
 
-    Use the following concepts and examples to create questions that test a student's understanding in the categories of "Grasping", "Retention", and "Application".
+    Use the following structured data to create questions that test a student's understanding across the four fundamentals.
 
     Concepts:
     {{#each topicData.concepts}}
@@ -87,7 +93,7 @@ const dataDrivenPrompt = ai.definePrompt({
     - 4 multiple-choice options, with only one correct answer.
     - An explanation for the correct answer.
     - An adaptive difficulty rating ('easy', 'medium', 'hard') based on the user's performance.
-    - A category ('Grasping', 'Retention', 'Application') that targets a weak area if possible.
+    - A category from the four fundamentals ('Listening', 'Grasping', 'Retention', 'Application') that targets a weak area if possible.
 
     Output ONLY valid JSON. DO NOT include any other text.
     `,
@@ -110,7 +116,7 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
         // Fallback to the generic generator if no specific data is found for the topic
         console.log(`No topic data found for '${input.topic}' in Firestore. Falling back to generic test generation.`);
         return generatePersonalizedTest({
-            weakAreas: 'Grasping, Retention, Application',
+            weakAreas: 'Grasping, Retention, Application, Listening',
             numberOfQuestions: input.numberOfQuestions,
             learningContext: userProfile?.learningContext,
             aggregatedPerformance: userProfile?.aggregatedPerformance,
@@ -134,7 +140,7 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
         // If the data-driven flow fails, fallback to the original personalized test generator
         console.log("Falling back to generic test generation due to an error.");
         return generatePersonalizedTest({
-            weakAreas: 'Grasping, Retention, Application',
+            weakAreas: 'Grasping, Retention, Application, Listening',
             numberOfQuestions: input.numberOfQuestions,
             learningContext: userProfile?.learningContext,
             aggregatedPerformance: userProfile?.aggregatedPerformance,

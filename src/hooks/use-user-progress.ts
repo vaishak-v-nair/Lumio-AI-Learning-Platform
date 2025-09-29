@@ -12,6 +12,7 @@ const DEFAULT_PROGRESS = [
     { title: "Grasping", value: 0 },
     { title: "Retention", value: 0 },
     { title: "Application", value: 0 },
+    { title: "Listening", value: 0 },
 ];
 
 export function useUserProgress() {
@@ -43,7 +44,7 @@ export function useUserProgress() {
             }
         });
 
-        const allCategories = ["Grasping", "Retention", "Application"];
+        const allCategories = ["Grasping", "Retention", "Application", "Listening"];
         allCategories.forEach(cat => {
             if (!categoryData[cat]) {
                 categoryData[cat] = { corrects: [], count: 0 };
