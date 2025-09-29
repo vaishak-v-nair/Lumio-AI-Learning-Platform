@@ -1,3 +1,4 @@
+
 'use client';
 import {
   collection,
@@ -27,9 +28,7 @@ export interface TestResult {
 
 export interface UserProfile {
   userId: string;
-  educationLevel: string;
-  stream: string;
-  interests: string;
+  userDetails: string;
   createdAt: string;
 }
 

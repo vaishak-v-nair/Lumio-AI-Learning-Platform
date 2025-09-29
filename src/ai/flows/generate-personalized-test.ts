@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -20,9 +21,7 @@ const GeneratePersonalizedTestInputSchema = z.object({
   numberOfQuestions: z
     .number()
     .describe('The number of questions to generate for the test.'),
-  educationLevel: z.string().optional().describe('The education level of the student (e.g., 8th Grade).'),
-  stream: z.string().optional().describe('The academic stream of the student (e.g., Science).'),
-  interests: z.string().optional().describe('The student\'s areas of interest (e.g., Math, Literature).'),
+  userDetails: z.string().optional().describe('Free-form text describing the user, including their education level, academic stream, interests, and learning style.'),
 });
 export type GeneratePersonalizedTestInput = z.infer<
   typeof GeneratePersonalizedTestInputSchema
@@ -60,14 +59,12 @@ const prompt = ai.definePrompt({
   prompt: `You are an expert test generator. You will generate a test for a student based on their profile and weak areas.
 
   Student Profile:
-  - Education Level: {{{educationLevel}}}
-  - Academic Stream: {{{stream}}}
-  - Interests: {{{interests}}}
+  - Details: {{{userDetails}}}
 
   Weak Areas: {{{weakAreas}}}
   Number of Questions: {{{numberOfQuestions}}}
   
-  Please generate questions that are relevant to the student's profile. For example, for a student in 8th Grade Science, create age-appropriate questions related to their interests.
+  Please generate questions that are relevant to the student's profile. For example, for a student in 8th Grade Science interested in Math, create age-appropriate questions related to their interests.
   Each question should have 4 options. One and only one should be correct.
   Include an explanation of the correct answer.
   Dynamically configure the scoring logic for each generated question.
