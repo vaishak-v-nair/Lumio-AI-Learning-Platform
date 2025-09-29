@@ -154,23 +154,6 @@ export const getLatestTestResult = async (
 };
 
 
-export const getTopicDataDoc = async (topic: string): Promise<TopicData | null> => {
-  try {
-    const docRef = doc(firestore, 'topicData', topic);
-    const docSnap = await getDoc(docRef);
-
-    if (docSnap.exists()) {
-      return docSnap.data() as TopicData;
-    } else {
-      console.log(`No such document for topic: ${topic}`);
-      return null;
-    }
-  } catch (e) {
-    console.error('Error getting topic data: ', e);
-    return null;
-  }
-};
-
 export const createUserProfile = async (profile: UserProfile): Promise<boolean> => {
   try {
     // Use setDoc with merge: true to create or update the profile
