@@ -81,7 +81,8 @@ export default function AuthForm() {
             const user = userCredential.user;
             await updateProfile(user, { displayName: username });
             
-            await createUserProfile({ userId: username });
+            // We will create the profile after the onboarding step.
+            // await createUserProfile({ userId: username });
 
             localStorage.setItem('userName', username);
             localStorage.setItem('userUID', user.uid);
@@ -133,8 +134,8 @@ export default function AuthForm() {
   };
 
   return (
-    <Card className="relative overflow-hidden h-[480px]">
-        <div className={cn("transition-all duration-500 absolute w-full", authAction === 'login' ? 'opacity-100' : 'opacity-0 -translate-x-full')}>
+    <Card className="relative overflow-hidden h-auto animate-fade-in-up">
+        <div className={cn("transition-all duration-500 w-full", authAction === 'login' ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden')}>
             <CardHeader className="text-center">
                 <CardTitle>Welcome Back</CardTitle>
                 <CardDescription>
@@ -166,7 +167,7 @@ export default function AuthForm() {
             </CardContent>
         </div>
 
-        <div className={cn("transition-all duration-500 absolute w-full", authAction === 'signup' ? 'opacity-100' : 'opacity-0 translate-x-full')}>
+        <div className={cn("transition-all duration-500 w-full", authAction === 'signup' ? 'opacity-100' : 'opacity-0 h-0 overflow-hidden')}>
             <CardHeader className="text-center">
                 <CardTitle>Create an Account</CardTitle>
                 <CardDescription>
