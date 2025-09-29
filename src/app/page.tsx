@@ -2,7 +2,6 @@
 import Image from 'next/image';
 import AuthForm from '@/components/auth/AuthForm';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { LumioLogo } from '@/components/LumioLogo';
 
 export default function AuthenticationPage() {
 
@@ -15,7 +14,6 @@ export default function AuthenticationPage() {
           <div className="mx-auto grid w-[380px] max-w-full gap-6">
             <div className="grid gap-4 text-center">
               <div className="flex items-center justify-center gap-2">
-                <LumioLogo />
                 <h1 className="text-3xl font-bold font-headline text-primary">Lumio</h1>
               </div>
               <p className="text-balance text-muted-foreground">

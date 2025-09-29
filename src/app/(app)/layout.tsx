@@ -5,7 +5,6 @@ import { LogOut, User, Settings, LayoutDashboard, Trophy, BookOpen, Users, Schoo
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LumioLogo } from "@/components/LumioLogo";
 import { useEffect, useState, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { TestResultProvider } from "@/context/TestResultContext";
@@ -87,7 +86,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
           <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-8">
             <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
-              <LumioLogo />
               <span className="font-bold">Lumio</span>
             </Link>
             {navItems.map((item) => (
