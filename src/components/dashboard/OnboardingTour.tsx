@@ -84,20 +84,21 @@ export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
         
         if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-            element.style.setProperty('z-index', '51');
+            element.style.setProperty('z-index', '101'); // Ensure highlighted element is above the overlay
             element.style.setProperty('position', 'relative');
-            element.classList.add('tour-highlight');
+            
+            // Give a moment for scroll to complete before highlighting
+            const timeoutId = setTimeout(() => {
+                element.classList.add('tour-highlight');
+                updatePosition();
+            }, 300);
 
-            // Initial position update
-            updatePosition();
-        }
-
-        return () => {
-             if (element) {
+            return () => {
+                clearTimeout(timeoutId);
                 element.classList.remove('tour-highlight');
-                 element.style.removeProperty('z-index');
-                 element.style.removeProperty('position');
-             }
+                element.style.removeProperty('z-index');
+                element.style.removeProperty('position');
+            }
         }
 
     }, [currentStep, onFinish, updatePosition]);
@@ -110,10 +111,11 @@ export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
     }, [updatePosition]);
 
     const handleNext = () => {
-         // Remove highlight from current element before moving to next
         const currentElement = document.getElementById(tourSteps[currentStep].elementId);
         if (currentElement) {
             currentElement.classList.remove('tour-highlight');
+            currentElement.style.removeProperty('z-index');
+            currentElement.style.removeProperty('position');
         }
         setCurrentStep(prev => prev + 1);
     };
@@ -127,22 +129,17 @@ export default function OnboardingTour({ onFinish }: { onFinish: () => void }) {
         <Dialog open={isOpen} onOpenChange={(open) => { if(!open) onFinish() }}>
              <style jsx global>{`
                 .tour-highlight {
-                    outline: 2px solid hsl(var(--primary));
-                    box-shadow: 0 0 0 4px hsl(var(--background)), 0 0 15px 5px hsl(var(--primary) / 0.5);
+                    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 0, 0, 0.5);
                     border-radius: var(--radius);
+                    transition: box-shadow 0.3s ease-in-out;
                 }
-                .dialog-overlay {
-                    position: fixed;
-                    inset: 0;
-                    background-color: hsl(var(--background) / 0.6);
-                    z-index: 50;
-                    backdrop-filter: blur(2px);
+                .tour-dialog-content {
+                    z-index: 102 !important; /* Ensure dialog is above the highlight shadow */
                 }
             `}</style>
-            <div className="dialog-overlay" />
             <DialogContent
                 hideCloseButton
-                className="fixed w-[350px] transition-all duration-300 ease-in-out"
+                className="fixed w-[350px] transition-all duration-300 ease-in-out tour-dialog-content animate-in fade-in"
                 style={position}
                 onInteractOutside={(e) => e.preventDefault()}
             >
