@@ -63,7 +63,7 @@ export default function DashboardPage() {
             });
 
             const testId = crypto.randomUUID();
-            setCurrentTest({ ...testData, topic: 'personalized-test', testId });
+            setCurrentTest({ ...testData, topic: 'Personalized Test', testId });
             setView('testing');
 
         } catch (error) {
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                     <p className="my-6 text-sm text-muted-foreground">
                         Our AI will generate a personalized test to help you focus on what matters most.
                     </p>
-                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('time-and-distance')}>
+                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest('personalized-test')}>
                         Start Personalized Test
                     </Button>
                 </CardContent>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                     <CardDescription>Drill down into your performance on specific topics.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 grid sm:grid-cols-2 gap-6">
-                    <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm">
+                    <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
                         <h3 className="font-semibold text-xl">Time & Distance</h3>
                         <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic, or start a new test.</p>
                          <div className="flex gap-2">
@@ -174,7 +174,7 @@ export default function DashboardPage() {
                             </Button>
                         </div>
                     </div>
-                     <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm">
+                     <div className="flex flex-col items-start justify-center text-left p-6 border rounded-2xl bg-card shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
                         <h3 className="font-semibold text-xl">Percentages</h3>
                         <p className="text-sm text-muted-foreground my-2 flex-1">View detailed report for this topic, or start a new test.</p>
                         <div className="flex gap-2">

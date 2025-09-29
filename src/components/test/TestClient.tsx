@@ -181,13 +181,12 @@ export default function TestClient({ testData, onFinish }: { testData: (Generate
     
     const currentQuestion = currentQuestions[currentQuestionIndex];
     const progressValue = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
-    const topicName = testData.topic.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     return (
-        <Card>
+        <Card className="w-full max-w-2xl mx-auto">
             <CardHeader>
                 <div className="flex justify-between items-center mb-2">
-                    <CardTitle>Test: {topicName}</CardTitle>
+                    <CardTitle>Test: {testData.topic}</CardTitle>
                     <div className="flex items-center gap-4">
                          <span className="text-xs font-mono px-2 py-1 bg-muted rounded-md capitalize">{currentQuestion.difficulty}</span>
                         <p className="text-sm text-muted-foreground">Question {currentQuestionIndex + 1} of {currentQuestions.length}</p>
@@ -221,7 +220,7 @@ export default function TestClient({ testData, onFinish }: { testData: (Generate
                         <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                 ) : (
-                    <Button onClick={handleAnswerSubmit} disabled={isSubmitting} className="ml-auto">
+                    <Button onClick={handleAnswerSubmit} disabled={isSubmitting || selectedAnswer === null} className="ml-auto">
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Submit Answer
                     </Button>

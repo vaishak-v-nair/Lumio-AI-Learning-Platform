@@ -49,55 +49,57 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
   }
 
   return (
-    <Card className="w-full max-w-lg mx-auto">
-      {step === 0 && (
-        <div className="animate-fade-in">
-          <CardHeader className="items-center text-center">
-            <div className="p-4 bg-primary/10 rounded-full mb-2">
-              <Rocket className="h-10 w-10 text-primary" />
-            </div>
-            <CardTitle className="text-3xl font-bold font-headline">Welcome to Lumio!</CardTitle>
-            <CardDescription>Let's personalize your learning journey.</CardDescription>
-          </CardHeader>
-          <CardContent className="text-center">
-            <p className="text-muted-foreground mb-6">
-              Just one quick step to help us understand your needs.
-            </p>
-            <Button onClick={nextStep} size="lg" className="w-full max-w-xs mx-auto">Get Started</Button>
-          </CardContent>
-        </div>
-      )}
-
-      {step === 1 && (
-         <form onSubmit={onSubmit} className="animate-fade-in">
-            <CardHeader>
-                <div className="flex items-start gap-4">
-                    <div className="p-2 bg-primary/10 rounded-full mt-1">
-                        <Sparkles className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <CardTitle>Tell Us About Yourself</CardTitle>
-                        <CardDescription>This helps us tailor the experience just for you.</CardDescription>
-                    </div>
-                </div>
+    <div className="flex justify-center items-center min-h-full">
+      <Card className="w-full max-w-lg mx-auto animate-fade-in-up">
+        {step === 0 && (
+          <>
+            <CardHeader className="items-center text-center">
+              <div className="p-4 bg-primary/10 rounded-full mb-2">
+                <Rocket className="h-10 w-10 text-primary" />
+              </div>
+              <CardTitle className="text-3xl font-bold font-headline">Welcome to Lumio!</CardTitle>
+              <CardDescription>Let's personalize your learning journey.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-                 <div className="space-y-2">
-                    <Label htmlFor="user-details">Describe your learning context</Label>
-                    <Textarea
-                        id="user-details"
-                        placeholder="e.g., I'm an 8th-grade student in the science stream. I'm interested in algebra and physics, and I learn best with visual examples."
-                        className="min-h-[120px] text-base"
-                        value={userDetails}
-                        onChange={(e) => setUserDetails(e.target.value)}
-                    />
-                 </div>
-                 <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                    {isLoading ? 'Setting things up...' : 'Create My Learning Plan'}
-                </Button>
+            <CardContent className="text-center">
+              <p className="text-muted-foreground mb-6">
+                Just one quick step to help us understand your needs.
+              </p>
+              <Button onClick={nextStep} size="lg" className="w-full max-w-xs mx-auto">Get Started</Button>
             </CardContent>
-         </form>
-      )}
-    </Card>
+          </>
+        )}
+
+        {step === 1 && (
+          <form onSubmit={onSubmit}>
+              <CardHeader>
+                  <div className="flex items-start gap-4">
+                      <div className="p-2 bg-primary/10 rounded-full mt-1">
+                          <Sparkles className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                          <CardTitle>Tell Us About Yourself</CardTitle>
+                          <CardDescription>This helps us tailor the experience just for you.</CardDescription>
+                      </div>
+                  </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                      <Label htmlFor="user-details">Describe your learning context</Label>
+                      <Textarea
+                          id="user-details"
+                          placeholder="e.g., I'm an 8th-grade student in the science stream. I'm interested in algebra and physics, and I learn best with visual examples."
+                          className="min-h-[120px] text-base"
+                          value={userDetails}
+                          onChange={(e) => setUserDetails(e.target.value)}
+                      />
+                  </div>
+                  <Button type="submit" className="w-full" size="lg" disabled={!userDetails}>
+                      {isLoading ? 'Setting things up...' : 'Create My Learning Plan'}
+                  </Button>
+              </CardContent>
+          </form>
+        )}
+      </Card>
+    </div>
   );
 }
