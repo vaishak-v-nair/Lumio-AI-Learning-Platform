@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { getUserProfile, createUserProfile, type UserProfile, type TestResult } from "@/lib/firestore";
 import { generateQuestionsFromTopicData } from '@/ai/flows/generate-questions-from-topic-data';
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 import { Loader2 } from "lucide-react";
 import { useTestResult } from "@/context/TestResultContext";
 
@@ -59,7 +60,7 @@ export default function DashboardPage() {
             });
             
             if (profile.userId) {
-                handleStartTest(profile.userId, "Percentages");
+                handleStartTest(profile.userId);
             }
 
         } catch (error) {
@@ -73,18 +74,18 @@ export default function DashboardPage() {
         }
     };
     
-    const handleStartTest = async (userId: string, topic: string) => {
+    const handleStartTest = async (userId: string) => {
         setView('loading');
         try {
             const testData = await generateQuestionsFromTopicData({
-                topic: topic,
+                topic: "Percentages",
                 numberOfQuestions: 10,
                 userId: userId
             });
             
-            const testId = crypto.randomUUID();
+            const testId = uuidv4();
             
-            setCurrentTest({ ...testData, topic: topic, testId});
+            setCurrentTest({ ...testData, topic: "Percentages", testId});
             setView('testing');
 
         } catch (error) {
@@ -131,32 +132,32 @@ export default function DashboardPage() {
         return <TestResults result={latestTestResult} onBackToDashboard={handleBackToDashboard} />;
     }
 
-    return (
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
-          <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
-            <Card>
-                 <CardHeader>
-                    <CardTitle>Start a New Test</CardTitle>
-                    <CardDescription>Begin a test tailored to your needs.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center justify-center space-y-4">
-                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName, 'Percentages')}>
-                        Start Test
-                    </Button>
-                </CardContent>
-            </Card>
-            
-            <div>
-              <LearningRecommendations />
-            </div>
-
-          </div>
-          <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
-            <div>
-              <ProgressOverview />
-            </div>
-            <Achievements />
-          </div>
-        </div>
-    );
+        return (
+                <div className="mx-auto w-full max-w-5xl px-4 py-8">
+                    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
+                        <div className="grid auto-rows-max items-start gap-4 lg:col-span-2 lg:gap-8">
+                            <Card>
+                                     <CardHeader>
+                                            <CardTitle>Start a New Test</CardTitle>
+                                            <CardDescription>Begin a test tailored to your needs.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="flex flex-col items-center justify-center space-y-4">
+                                            <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName)}>
+                                                    Start Personalized Test
+                                            </Button>
+                                    </CardContent>
+                            </Card>
+                            <div>
+                                <LearningRecommendations />
+                            </div>
+                        </div>
+                        <div className="grid auto-rows-max items-start gap-4 lg:gap-8">
+                            <div>
+                                <ProgressOverview />
+                            </div>
+                            <Achievements />
+                        </div>
+                    </div>
+                </div>
+        );
 }

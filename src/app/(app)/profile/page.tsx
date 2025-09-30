@@ -246,7 +246,7 @@ export default function ProfilePage() {
 
 
     if (!isClient) {
-        return <div className="mx-auto w-full max-w-4xl space-y-6">
+        return <div className="mx-auto w-full max-w-5xl px-4 py-8 space-y-6">
              <div>
                 <h1 className="text-3xl font-bold font-headline">My Profile</h1>
                 <p className="text-muted-foreground">View and manage your profile information.</p>
@@ -255,7 +255,7 @@ export default function ProfilePage() {
     }
 
     return (
-        <div className="mx-auto w-full max-w-4xl space-y-6">
+        <div className="mx-auto w-full max-w-5xl px-4 py-8 space-y-6">
             <div>
                 <h1 className="text-3xl font-bold font-headline">My Profile</h1>
                 <p className="text-muted-foreground">View and manage your profile information.</p>
@@ -296,6 +296,20 @@ export default function ProfilePage() {
                                             onCropChange={setCrop}
                                             onZoomChange={setZoom}
                                             onCropComplete={onCropComplete}
+                                            rotation={0}
+                                            minZoom={1}
+                                            maxZoom={3}
+                                            cropShape="rect"
+                                            showGrid={true}
+                                            restrictPosition={true}
+                                            zoomWithScroll={true}
+                                            cropSize={undefined}
+                                            style={{ containerStyle: {}, mediaStyle: {}, cropAreaStyle: {} }}
+                                            zoomSpeed={1}
+                                            classes={{}}
+                                            mediaProps={{}}
+                                            cropperProps={{}}
+                                            keyboardStep={1}
                                         />
                                     </div>
                                     <div className="space-y-2">
