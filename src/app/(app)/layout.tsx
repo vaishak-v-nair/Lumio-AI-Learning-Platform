@@ -1,7 +1,7 @@
 
 "use client";
 import type { ReactNode } from "react";
-import { LogOut, User, Settings, LayoutDashboard, Trophy, BookOpen, Users, School } from "lucide-react";
+import { LogOut, User, Settings, LayoutDashboard, Trophy, BookOpen, Users, School, Menu } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 
 const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" /> },
@@ -113,6 +115,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <TestResultProvider>
       <div className="flex min-h-screen w-full flex-col">
         <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
+          
           <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-8">
             <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold md:text-base">
               <span className="font-bold">Lumio</span>
@@ -130,6 +133,41 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 </Link>
             ))}
           </nav>
+
+           <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 md:hidden"
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <nav className="grid gap-6 text-lg font-medium">
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2 text-lg font-semibold"
+                >
+                   <span className="font-bold">Lumio</span>
+                </Link>
+                <Separator />
+                {navItems.map((item) => (
+                     <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn("flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground", pathname === item.href && "bg-muted text-foreground")}
+                    >
+                        {item.icon}
+                        {item.label}
+                    </Link>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
+
           <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
             <div className="ml-auto flex-1 sm:flex-initial" />
             <DropdownMenu>
