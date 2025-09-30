@@ -23,7 +23,8 @@ const navItems = [
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  const [userName, setUserName] = useState("Guest");
+  const [userName, setUserName] = useState("guest");
+  const [displayName, setDisplayName] = useState("Guest");
   const [userAvatar, setUserAvatar] = useState(`https://picsum.photos/seed/Guest/32/32`);
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
@@ -35,6 +36,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         if (storedName) {
             setUserName(storedName);
             const profile = await getUserProfile(storedName);
+            if (profile) {
+                setDisplayName(profile.name || storedName);
+            } else {
+                setDisplayName(storedName);
+            }
             if (!profile && pathname !== '/dashboard') { // Allow onboarding flow on dashboard
                 router.push('/dashboard');
             }
@@ -64,7 +70,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     const handleStorageChange = () => {
         const storedName = localStorage.getItem('userName');
         const storedAvatar = localStorage.getItem('userAvatar');
-        if (storedName) setUserName(storedName);
+        if (storedName) {
+            getUserProfile(storedName).then(profile => {
+                setDisplayName(profile?.name || storedName);
+            });
+        }
         if (storedAvatar) setUserAvatar(storedAvatar);
     };
 
@@ -95,7 +105,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   }
 
   const user = {
-    name: userName,
+    name: displayName,
     avatar: userAvatar,
   };
 
