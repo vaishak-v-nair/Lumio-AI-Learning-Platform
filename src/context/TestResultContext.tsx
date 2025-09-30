@@ -17,16 +17,23 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchResult = useCallback(async (topic?: string) => {
+    // If we already have data, don't re-fetch unless forced.
+    if (latestResult && !topic) {
+        setIsLoading(false);
+        return;
+    }
+
     setIsLoading(true);
     const userName = localStorage.getItem('userName') || 'guest';
     
     // On the results page, we want immediate feedback.
-    const isResultsPage = window.location.pathname.includes('/test/results');
+    const isResultsPage = typeof window !== 'undefined' && window.location.pathname.includes('/test/results');
 
     if (isResultsPage) {
         const localResult = localStorage.getItem('lastTestResult');
         if (localResult) {
-            setLatestResult(JSON.parse(localResult));
+            const parsedResult = JSON.parse(localResult);
+            setLatestResult(parsedResult);
             setIsLoading(false);
             return;
         }
@@ -41,14 +48,16 @@ export function TestResultProvider({ children }: { children: ReactNode }) {
     }
     
     setIsLoading(false);
-  }, []);
+  }, [latestResult]);
 
 
   useEffect(() => {
     // On initial load, try to get the topic from the URL if available
-    const pathParts = window.location.pathname.split('/');
+    const pathParts = typeof window !== 'undefined' ? window.location.pathname.split('/') : [];
     const topic = pathParts.includes('diagnostics') ? pathParts[pathParts.length - 1] : undefined;
     fetchResult(topic);
+    // The dependency array is intentionally sparse to only run on initial load and when the function itself changes.
+    // We control re-fetching with the refreshResult callback.
   }, [fetchResult]);
 
   return (
