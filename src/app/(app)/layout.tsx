@@ -43,7 +43,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             } else {
                 setDisplayName(storedName);
             }
-            if (!profile && pathname !== '/dashboard') { // Allow onboarding flow on dashboard
+            // This check should only redirect if the user is not already on the dashboard
+            // and has no profile, to allow the onboarding flow to happen.
+            if (!profile && pathname !== '/dashboard') {
                 router.push('/dashboard');
             }
         } else {
@@ -60,7 +62,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     } else {
         router.push('/');
     }
-  }, [pathname, router]);
+  }, [router, pathname]);
 
   useEffect(() => {
     setIsClient(true);
@@ -191,7 +193,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </DropdownMenu>
           </div>
         </header>
-        <main className="flex min-h-[calc(100vh_-_4rem)] flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-8">
+        <main className="flex min-h-[calc(100vh_-_4rem)] flex-1 flex-col gap-4 bg-muted/40 p-4 md:gap-8 md:p-10">
           <div className="mx-auto w-full max-w-6xl">
             {children}
           </div>
