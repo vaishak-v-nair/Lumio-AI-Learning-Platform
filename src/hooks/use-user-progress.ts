@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTestResult } from '@/context/TestResultContext';
-import type { Question } from '@/ai/flows/generate-personalized-test';
+import type { Question } from '@/ai/flows/generate-questions-from-topic-data';
 
 type ProgressItem = {
     title: string;
@@ -18,6 +18,7 @@ const DEFAULT_PROGRESS = [
 export function useUserProgress() {
   const [progressData, setProgressData] = useState<ProgressItem[]>(DEFAULT_PROGRESS);
   const { latestResult: results, isLoading } = useTestResult();
+  const [hasProgress, setHasProgress] = useState(false);
 
   useEffect(() => {
     if (results) {
@@ -28,6 +29,7 @@ export function useUserProgress() {
 
         if (!isToday) {
             setProgressData(DEFAULT_PROGRESS);
+            setHasProgress(false);
             return;
         }
 
@@ -57,12 +59,14 @@ export function useUserProgress() {
             value: categoryData[category].count > 0 ? Math.round((categoryData[category].corrects.length / categoryData[category].count) * 100) : 0,
         }));
         setProgressData(newProgressData);
+        setHasProgress(true);
 
     } else {
         // Provide a default or empty state when no results are available
         setProgressData(DEFAULT_PROGRESS);
+        setHasProgress(false);
     }
   }, [results]);
 
-  return { progressData, isLoading };
+  return { progressData, isLoading, hasProgress };
 }

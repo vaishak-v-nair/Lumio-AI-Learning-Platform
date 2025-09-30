@@ -14,14 +14,12 @@ import { useUserProgress } from '@/hooks/use-user-progress';
 export default function LearningRecommendations() {
     const [recommendation, setRecommendation] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const { progressData, isLoading: isProgressLoading } = useUserProgress();
+    const { progressData, isLoading: isProgressLoading, hasProgress } = useUserProgress();
 
     useEffect(() => {
         const fetchRecommendation = async () => {
-            if (isProgressLoading || progressData.length === 0) {
-                if (!isProgressLoading) {
-                    setIsLoading(false);
-                }
+            if (!hasProgress) {
+                 setIsLoading(false);
                 return;
             }
 
@@ -31,12 +29,16 @@ export default function LearningRecommendations() {
             const weakestArea = [...progressData].sort((a, b) => a.value - b.value)[0];
 
             try {
-                const result: LearningRecommendationOutput = await generateLearningRecommendation({
-                    studentId: 'student123', // This would be dynamic in a real multi-user app
-                    weakness: weakestArea.title,
-                    context: 'student'
-                });
-                setRecommendation(result.recommendation);
+                if (weakestArea) {
+                    const result: LearningRecommendationOutput = await generateLearningRecommendation({
+                        studentId: 'student123', // This would be dynamic in a real multi-user app
+                        weakness: weakestArea.title,
+                        context: 'student'
+                    });
+                    setRecommendation(result.recommendation);
+                } else {
+                    setRecommendation('');
+                }
             } catch (error) {
                 console.error("Failed to generate recommendation:", error);
                 setRecommendation('');
@@ -44,8 +46,12 @@ export default function LearningRecommendations() {
                 setIsLoading(false);
             }
         };
-        fetchRecommendation();
-    }, [progressData, isProgressLoading]);
+        
+        if (!isProgressLoading) {
+            fetchRecommendation();
+        }
+
+    }, [progressData, isProgressLoading, hasProgress]);
 
 
     if (isLoading) {

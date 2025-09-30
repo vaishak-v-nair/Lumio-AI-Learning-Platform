@@ -78,7 +78,7 @@ export default function DashboardPage() {
         try {
             const testData = await generateQuestionsFromTopicData({
                 topic: topic,
-                numberOfQuestions: 5,
+                numberOfQuestions: 10,
                 userId: userId
             });
             
@@ -141,7 +141,7 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center space-y-4">
                     <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName, 'Percentages')}>
-                        Start Percentages Test
+                        Start Test
                     </Button>
                 </CardContent>
             </Card>
