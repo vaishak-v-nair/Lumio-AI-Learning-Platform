@@ -35,20 +35,20 @@ const refineTestDifficultyPrompt = ai.definePrompt({
   output: {schema: RefineTestDifficultyOutputSchema},
   prompt: `You are an AI assistant that helps refine the difficulty of test questions based on student performance.
 
-  Analyze the provided question performance data and suggest a new difficulty level (1 for easy, 2 for medium, 3 for hard). Explain your reasoning for the adjustment.
+  Analyze the provided question performance data and suggest a new difficulty level. The difficulty must be an integer: 1 for easy, 2 for medium, or 3 for hard.
 
   Question ID: {{{questionId}}}
   Success on last attempt: {{{successRate}}} (1 for correct, 0 for incorrect)
   Current Difficulty: {{{currentDifficulty}}} (1=easy, 2=medium, 3=hard)
 
-  Consider these guidelines:
-  - If the answer was correct (successRate=1), consider increasing the difficulty.
+  Guidelines:
+  - If the answer was correct (successRate=1), consider increasing the difficulty. But do not jump from easy (1) to hard (3).
   - If the answer was incorrect (successRate=0), consider decreasing the difficulty.
-  - Adjust the difficulty gradually (e.g., from 2 to 3, or 2 to 1). Don't make drastic jumps like 1 to 3.
+  - Adjust the difficulty gradually (e.g., from medium (2) to hard (3), or medium (2) to easy (1)).
   - Provide a brief, one-sentence reasoning for the adjustment.
-  - The new difficulty must be an integer between 1 and 3.
+  - The new difficulty MUST be an integer between 1 and 3.
 
-  New Difficulty: 
+  New Difficulty:
   Reasoning: `,
 });
 
@@ -66,15 +66,18 @@ const refineTestDifficultyFlow = ai.defineFlow(
         if (!output) {
           throw new Error("The AI model failed to produce a valid difficulty refinement.");
         }
-        // Clamp the difficulty to be within the 1-3 range
+        // Clamp the difficulty to be within the 1-3 range and ensure it's an integer
         output.newDifficulty = Math.max(1, Math.min(3, Math.round(output.newDifficulty)));
         return output;
     } catch (error) {
         console.error("Error in refineTestDifficultyFlow:", error);
         // Fallback for when the AI service fails
-        const fallbackDifficulty = input.successRate === 1 
-            ? Math.min(3, input.currentDifficulty + 1)
-            : Math.max(1, input.currentDifficulty - 1);
+        let fallbackDifficulty = input.currentDifficulty;
+        if (input.successRate === 1) {
+            fallbackDifficulty = Math.min(3, input.currentDifficulty + 1);
+        } else {
+            fallbackDifficulty = Math.max(1, input.currentDifficulty - 1);
+        }
         return {
             newDifficulty: fallbackDifficulty,
             reasoning: "Could not refine difficulty via AI. Using standard adjustment.",

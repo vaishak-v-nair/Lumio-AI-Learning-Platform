@@ -183,7 +183,7 @@ export default function TestClient({ testData, onFinish }: { testData: (Generate
     const progressValue = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
 
     return (
-        <Card className="w-full max-w-2xl mx-auto">
+        <Card className="w-full max-w-2xl mx-auto rounded-2xl">
             <CardHeader>
                 <div className="flex justify-between items-center mb-2">
                     <CardTitle>Test: {testData.topic}</CardTitle>
