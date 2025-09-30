@@ -76,7 +76,7 @@ const generateLearningRecommendationFlow = ai.defineFlow(
       console.error("Error in generateLearningRecommendationFlow:", error);
       // Fallback for when the AI service fails
       return {
-        recommendation: "Could not generate a recommendation at this time. Please try again later.",
+        recommendation: "Focus on reviewing topics where your accuracy is lowest. Consistent practice in these areas will help build a stronger foundation.",
       };
     }
   }
