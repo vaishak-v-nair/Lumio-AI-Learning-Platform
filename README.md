@@ -1,1 +1,51 @@
-# Lumio: An AI-Powered Adaptive Learning Platform\n\nLumio is an intelligent, personalized learning platform designed to help students master new topics. It leverages cutting-edge generative AI to create a dynamic and responsive educational experience that adapts to each user\'s individual learning pace and style.\n\n## \ud83d\udd11 Key Features\n\n*   **AI-Powered Test Generation**: Automatically generates personalized tests & quizzes using a Retrieval-Augmented Generation (RAG) model. Each question comes with dynamic scoring logic configured by AI.\n*   **Adaptive Testing Engine**: Adjusts difficulty in real-time based on student responses, ensuring students stay challenged but not overwhelmed.\n*   **AI-Powered Scoring & Feedback**: Moves beyond simple right/wrong checks. The AI dynamically scores answers and provides detailed, encouraging explanations for both correct and incorrect responses.\n*   **Real-Time Progress Tracking**: Provides instant updates to student scores and progress bars, with visual dashboards, charts, and trends.\n*   **Comprehensive Diagnostic Reporting**: Breaks down strengths & weaknesses across four key pillars: Listening, Grasping, Retention, and Application. Provides clear visualizations like radar charts and heatmaps.\n*   **Personalized Learning Recommendations**: AI prescribes targeted practice content and learning plans to help students strengthen weak areas.\n*   **Multi-Perspective Dashboards**:\n    *   **Teacher View**: Class heatmaps, group performance insights.\n    *   **Parent View**: Simple reports and progress summary of their child.\n    *   **Student View**: Tracks daily progress, achievements, and launches tests.\n*   **Gamification & Engagement**: Motivates learners by awarding badges and tracking achievements for milestones.\n*   **Secure User Authentication**: Provides role-based login (student, parent, teacher) and guest access for a quick demo.\n\n## Technology Stack\n\n*   **Framework**: [Next.js](https://nextjs.org/) (with App Router)\n*   **Language**: [TypeScript](https://www.typescriptlang.org/)\n*   **AI/Generative**: [Google\'s Gemini models](https://deepmind.google/technologies/gemini/) via [Genkit](https://firebase.google.com/docs/genkit)\n*   **UI**: [React](https://react.dev/) with [ShadCN UI](https://ui.shadcn.com/) components\n*   **Styling**: [Tailwind CSS](https://tailwindcss.com/)\n*   **Backend & Database**: [Firebase](https://firebase.google.com/) (Firestore for database, Firebase Auth for authentication)\n*   **Charting**: [Recharts](https://recharts.org/)\n\n## Getting Started\n\nThese instructions will get you a copy of the project up and running on your local machine for development and testing purposes.\n\n### Prerequisites\n\n*   Node.js (v18 or later)\n*   npm\n\n### Installation\n\n1.  **Clone the repository:**\n    ```bash\n    git clone https://github.com/your-repo/your-project.git\n    cd your-project\n    ```\n2.  **Install dependencies:**\n    ```bash\n    npm install\n    ```\n3.  **Set up your environment variables:**\n\n    Create a file named `.env` in the root of your project and add your Google AI API key:\n\n    ```\n    # No .local needed, this file is gitignored\n    GOOGLE_API_KEY=your_google_api_key\n    ```\n\n    Replace `your_google_api_key` with your actual Google API key. You can obtain a key from the [Google AI Studio](https://aistudio.google.com/app/apikey).\n\n4.  **Run the development server:**\n    ```bash\n    npm run dev\n    ```\n\n    Open [http://localhost:9002](http://localhost:9002) with your browser to see the result.\n\n## License\n\nThis project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.\n
+# Lumio - Your Personalized Learning Companion
+
+## About
+
+Lumio is a web application designed to provide a personalized learning experience. It leverages AI to understand your learning needs and creates a tailored educational journey just for you.
+
+## Features
+
+*   **User Authentication:** Secure sign-up and login functionality.
+*   **Personalized Onboarding:** A quick and easy multi-step form to understand your educational background and interests.
+*   **AI-Powered Learning:** Utilizes Google's AI to generate custom learning plans and questions.
+*   **User Profiles:** View and manage your profile information, including your name and bio.
+*   **Performance Tracking:** Track your progress and review your test results.
+
+## Technologies Used
+
+*   **Frontend:**
+    *   [Next.js](https://nextjs.org/)
+    *   [React](https://reactjs.org/)
+    *   [TypeScript](https://www.typescriptlang.org/)
+    *   [Tailwind CSS](https://tailwindcss.com/)
+*   **Backend & Database:**
+    *   [Firebase](https://firebase.google.com/) (Authentication, Firestore)
+*   **AI:**
+    *   [Google AI (Genkit)](https://developers.google.com/genkit)
+
+## Getting Started
+
+To get a local copy up and running, follow these simple steps.
+
+### Prerequisites
+
+*   Node.js and npm installed on your machine.
+*   A Firebase project set up with Authentication and Firestore enabled.
+
+### Installation
+
+1.  Clone the repo
+    ```sh
+    git clone https://github.com/vaishak-v-nair/lumio.git
+    ```
+2.  Install NPM packages
+    ```sh
+    npm install
+    ```
+3.  Set up your environment variables. You'll need to create a `.env.local` file in the root of the project and add your Firebase configuration.
+4.  Run the development server
+    ```sh
+    npm run dev
+    ```
+    The application will be available at `http://localhost:9003`.
