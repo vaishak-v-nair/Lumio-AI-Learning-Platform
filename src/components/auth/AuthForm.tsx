@@ -15,26 +15,12 @@ import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { getUserProfile, createUserProfile } from '@/lib/firestore';
+import { getUserProfile } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, sendSignInLinkToEmail } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 type AuthAction = 'login' | 'signup';
-
-const actionCodeSettings = {
-  url: process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
-  handleCodeInApp: true,
-  iOS: {
-    bundleId: 'com.example.ios'
-  },
-  android: {
-    packageName: 'com.example.android',
-    installApp: true,
-    minimumVersion: '12'
-  },
-  dynamicLinkDomain: process.env.NEXT_PUBLIC_DYNAMIC_LINK_DOMAIN
-};
 
 export default function AuthForm() {
   const router = useRouter();
@@ -94,21 +80,12 @@ export default function AuthForm() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             await updateProfile(user, { displayName: username });
-            
-            await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-            window.localStorage.setItem('emailForSignIn', email);
-
-            toast({
-                title: 'Verification Email Sent',
-                description: 'A sign-in link has been sent to your email address.',
-            });
 
             localStorage.setItem('userName', username);
             localStorage.setItem('userUID', user.uid);
             
             router.push('/dashboard');
         } catch (error: any) {
-            console.error("Signup error", error);
              toast({
                 variant: 'destructive',
                 title: 'Sign Up Failed',
@@ -141,7 +118,6 @@ export default function AuthForm() {
             }
 
        } catch (error: any) {
-            console.error("Login error", error);
             toast({
                 variant: 'destructive',
                 title: 'Login Failed',
