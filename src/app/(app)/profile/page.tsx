@@ -79,7 +79,10 @@ export default function ProfilePage() {
                 if (profile) {
                     setDisplayName(profile.name || storedUsername);
                     setBio(profile.bio || "This is a placeholder bio. You can edit it by clicking the button below!");
+                    setAvatar(profile.avatarUrl || `https://picsum.photos/seed/${storedUsername}/128/128`);
                     setMemberSince(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+                } else {
+                     setAvatar(`https://picsum.photos/seed/${storedUsername}/128/128`);
                 }
             }
         };
@@ -89,9 +92,6 @@ export default function ProfilePage() {
         const storedAvatar = localStorage.getItem('userAvatar');
          if (storedAvatar) {
             setAvatar(storedAvatar);
-        } else {
-            const storedName = localStorage.getItem('userName');
-            setAvatar(`https://picsum.photos/seed/${storedName || 'Guest'}/128/128`);
         }
     }, []);
     
@@ -187,19 +187,29 @@ export default function ProfilePage() {
         setIsCropping(true);
         try {
             const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
-            setAvatar(croppedImage);
-            localStorage.setItem('userAvatar', croppedImage);
+            
+            // In a real app, you would upload this blob to Firebase Storage and get a URL.
+            // For this demo, we'll continue using a data URL stored in Firestore & localStorage.
+            // const blob = await fetch(croppedImage).then(r => r.blob());
+            // const storageRef = ref(storage, `avatars/${username}`);
+            // await uploadBytes(storageRef, blob);
+            // const downloadURL = await getDownloadURL(storageRef);
+
+            const downloadURL = croppedImage; // Using data URL directly for demo
+
+            setAvatar(downloadURL);
+            localStorage.setItem('userAvatar', downloadURL);
+            await createUserProfile({ userId: username, avatarUrl: downloadURL });
+
             window.dispatchEvent(new Event('storage')); // Notify layout of avatar change
             setIsAvatarDialogOpen(false);
-            setImageSrc(null);
-            setZoom(1);
-            setCrop({ x: 0, y: 0 });
+            resetAvatarDialog();
         } catch (e) {
             console.error(e);
             toast({
                 variant: 'destructive',
-                title: 'Error Cropping Image',
-                description: 'Something went wrong while cropping the image. Please try again.'
+                title: 'Error Saving Avatar',
+                description: 'Something went wrong while saving the avatar. Please try again.'
             });
         } finally {
             setIsCropping(false);
@@ -225,6 +235,8 @@ export default function ProfilePage() {
         setImageSrc(null);
         setIsTakingPhoto(false);
         setHasCameraPermission(null);
+        setZoom(1);
+        setCrop({ x: 0, y: 0 });
         if (videoRef.current && videoRef.current.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
@@ -325,7 +337,7 @@ export default function ProfilePage() {
                             <DialogFooter>
                                 {imageSrc ? (
                                      <>
-                                        <Button variant="ghost" onClick={() => setImageSrc(null)}>Back</Button>
+                                        <Button variant="ghost" onClick={() => resetAvatarDialog()}>Back</Button>
                                         <Button onClick={handleSaveAvatar} disabled={isCropping}>
                                             {isCropping ? 'Saving...' : 'Save Avatar'}
                                         </Button>

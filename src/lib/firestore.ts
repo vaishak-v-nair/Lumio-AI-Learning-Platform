@@ -48,6 +48,7 @@ export interface UserProfile {
   learningContext?: string;
   createdAt?: string;
   bio?: string;
+  avatarUrl?: string;
   performanceHistory?: PerformanceHistory[];
   aggregatedPerformance?: AggregatedPerformance;
 }
@@ -155,7 +156,7 @@ export const getLatestTestResult = async (
 };
 
 
-export const createUserProfile = async (profile: UserProfile): Promise<boolean> => {
+export const createUserProfile = async (profile: Partial<UserProfile> & { userId: string }): Promise<boolean> => {
   try {
     // Use setDoc with merge: true to create or update the profile
     await setDoc(doc(firestore, 'users', profile.userId), profile, { merge: true });
