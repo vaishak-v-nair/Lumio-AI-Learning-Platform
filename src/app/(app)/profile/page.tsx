@@ -19,8 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Slider } from "@/components/ui/slider";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getUserProfile, createUserProfile } from "@/lib/firestore";
-import type { UserProfile } from "@/lib/firestore";
+import { getUserProfile, createUserProfile, getLatestTestResult } from "@/lib/firestore";
+import type { UserProfile, TestResult } from "@/lib/firestore";
 
 type Stat = {
     label: string;
@@ -75,7 +75,11 @@ export default function ProfilePage() {
             const storedUsername = localStorage.getItem('userName');
             if (storedUsername) {
                 setUsername(storedUsername);
-                const profile = await getUserProfile(storedUsername);
+                const [profile, latestTest] = await Promise.all([
+                    getUserProfile(storedUsername),
+                    getLatestTestResult(storedUsername)
+                ]);
+
                 if (profile) {
                     setDisplayName(profile.name || storedUsername);
                     setBio(profile.bio || "This is a placeholder bio. You can edit it by clicking the button below!");
@@ -89,22 +93,18 @@ export default function ProfilePage() {
                     
                     const earnedAchievements = new Set<string>();
                     if (testsCompleted > 0) earnedAchievements.add('first_test');
-                    // In a real app, you'd have more complex logic for achievements.
-                    // For now, let's grant one for high average score.
-                    if (averageScore >= 85) earnedAchievements.add('topic_master');
+                    if (averageScore >= 90) earnedAchievements.add('topic_master');
                     if (testsCompleted >= 5) earnedAchievements.add('streak_5');
 
-                    // NOTE: Avg time per question is complex to calculate historically without more data.
-                    // We'll keep it based on the last test for now, or show N/A.
-                    const lastTestTime = profile.performanceHistory && profile.performanceHistory.length > 0
-                        ? 'N/A' // This data isn't in performanceHistory, would need to fetch full test result.
+                    const avgTimeLastTest = latestTest?.timings 
+                        ? `${Math.round(latestTest.timings.reduce((a, b) => a + b, 0) / latestTest.timings.length)}s`
                         : 'N/A';
 
                     setStats([
                         { label: "Tests Completed", value: testsCompleted.toString(), icon: <BookOpen className="h-6 w-6 text-primary" /> },
                         { label: "Average Score", value: `${averageScore}%`, icon: <Target className="h-6 w-6 text-green-500" /> },
                         { label: "Total Achievements", value: earnedAchievements.size.toString(), icon: <Award className="h-6 w-6 text-amber-500" /> },
-                        { label: "Avg. Time / Question", value: lastTestTime, icon: <Clock className="h-6 w-6 text-blue-500" /> },
+                        { label: "Avg. Time / Q (Last Test)", value: avgTimeLastTest, icon: <Clock className="h-6 w-6 text-blue-500" /> },
                     ]);
 
                 } else {
@@ -113,7 +113,7 @@ export default function ProfilePage() {
                         { label: "Tests Completed", value: "0", icon: <BookOpen className="h-6 w-6 text-primary" /> },
                         { label: "Average Score", value: "N/A", icon: <Target className="h-6 w-6 text-green-500" /> },
                         { label: "Total Achievements", value: "0", icon: <Award className="h-6 w-6 text-amber-500" /> },
-                        { label: "Avg. Time / Question", value: "N/A", icon: <Clock className="h-6 w-6 text-blue-500" /> },
+                        { label: "Avg. Time / Q (Last Test)", value: "N/A", icon: <Clock className="h-6 w-6 text-blue-500" /> },
                     ]);
                 }
             }
@@ -193,6 +193,9 @@ export default function ProfilePage() {
         setIsCropping(true);
         try {
             const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
+            
+            // In a real app, you would upload this blob to Firebase Storage
+            // and get a download URL. For this demo, we'll use the local blob URL.
             const downloadURL = croppedImage; 
 
             setAvatar(downloadURL);
@@ -439,5 +442,7 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
 
     
