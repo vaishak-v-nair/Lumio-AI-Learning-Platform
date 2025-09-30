@@ -65,17 +65,6 @@ export default function AuthForm() {
     setIsLoading(true);
 
     if (authAction === 'signup') {
-        const existingProfile = await getUserProfile(username);
-        if (existingProfile) {
-            toast({
-                variant: 'destructive',
-                title: 'Username Taken',
-                description: 'This username is already in use. Please choose another one.',
-            });
-            setIsLoading(false);
-            return;
-        }
-        
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
@@ -86,11 +75,19 @@ export default function AuthForm() {
             
             router.push('/dashboard');
         } catch (error: any) {
-             toast({
-                variant: 'destructive',
-                title: 'Sign Up Failed',
-                description: error.message || 'An unexpected error occurred.',
-            });
+             if (error.code === 'auth/email-already-in-use') {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Sign Up Failed',
+                    description: 'This email is already in use. Please try to log in.',
+                });
+             } else {
+                toast({
+                    variant: 'destructive',
+                    title: 'Sign Up Failed',
+                    description: error.message || 'An unexpected error occurred.',
+                });
+             }
             setIsLoading(false);
         }
 
@@ -109,8 +106,6 @@ export default function AuthForm() {
                  }
                  router.push('/dashboard');
             } else {
-                // This case can happen if displayName is not set on an existing user.
-                // We'll treat the part before the @ as the username.
                 const fallbackName = user.email?.split('@')[0] || 'guest';
                 localStorage.setItem('userName', fallbackName);
                 localStorage.setItem('userUID', user.uid);

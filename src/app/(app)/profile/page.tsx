@@ -21,6 +21,7 @@ import { Slider } from "@/components/ui/slider";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUserProfile, createUserProfile } from "@/lib/firestore";
+import type { UserProfile } from "@/lib/firestore";
 
 type Stat = {
     label: string;
@@ -29,7 +30,8 @@ type Stat = {
 };
 
 export default function ProfilePage() {
-    const [userName, setUserName] = useState("Guest");
+    const [displayName, setDisplayName] = useState("Guest");
+    const [username, setUsername] = useState("guest");
     const [bio, setBio] = useState("This is a placeholder bio. You can edit it by clicking the button below!");
     const [avatar, setAvatar] = useState(`https://picsum.photos/seed/Guest/128/128`);
     const [isClient, setIsClient] = useState(false);
@@ -70,11 +72,12 @@ export default function ProfilePage() {
     useEffect(() => {
         setIsClient(true);
         const loadProfile = async () => {
-            const storedName = localStorage.getItem('userName');
-            if (storedName) {
-                setUserName(storedName);
-                const profile = await getUserProfile(storedName);
+            const storedUsername = localStorage.getItem('userName');
+            if (storedUsername) {
+                setUsername(storedUsername);
+                const profile = await getUserProfile(storedUsername);
                 if (profile) {
+                    setDisplayName(profile.name || storedUsername);
                     setBio(profile.bio || "This is a placeholder bio. You can edit it by clicking the button below!");
                     setMemberSince(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
                 }
@@ -152,26 +155,24 @@ export default function ProfilePage() {
     }, [results]);
 
     const user = {
-        name: userName,
+        name: displayName,
         memberSince: memberSince
     };
     
     const handleSaveChanges = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const newName = e.currentTarget.username.value;
+        const newName = e.currentTarget.name.value;
         const newBio = e.currentTarget.bio.value;
         
-        setUserName(newName);
+        setDisplayName(newName);
         setBio(newBio);
 
-        const oldName = localStorage.getItem('userName');
-        if (oldName !== newName) {
-            localStorage.setItem('userName', newName);
-            // Dispatch a storage event to notify other tabs/windows
-            window.dispatchEvent(new Event('storage'));
-        }
+        const profileUpdate: Partial<UserProfile> = {
+            name: newName,
+            bio: newBio,
+        };
         
-        await createUserProfile({ userId: newName, bio: newBio });
+        await createUserProfile({ userId: username, ...profileUpdate });
 
         toast({
             title: "Profile Updated",
@@ -341,6 +342,7 @@ export default function ProfilePage() {
 
                     <div className="flex-1 text-center sm:text-left">
                         <h2 className="text-2xl font-semibold">{user.name}</h2>
+                        <p className="text-sm text-muted-foreground">@{username}</p>
                         <p className="text-muted-foreground italic mt-2">"{bio}"</p>
                         <p className="text-sm text-muted-foreground mt-2">Member since {user.memberSince}</p>
 
@@ -358,7 +360,11 @@ export default function ProfilePage() {
                                 <form onSubmit={handleSaveChanges} className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="username">Username</Label>
-                                        <Input id="username" defaultValue={userName} />
+                                        <Input id="username" value={username} disabled />
+                                    </div>
+                                     <div className="space-y-2">
+                                        <Label htmlFor="name">Display Name</Label>
+                                        <Input id="name" defaultValue={displayName} />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="bio">Bio</Label>

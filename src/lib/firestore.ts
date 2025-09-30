@@ -43,7 +43,8 @@ export interface PerformanceHistory {
 }
 
 export interface UserProfile {
-  userId: string;
+  userId: string; // This is the unique username
+  name?: string; // This is the display name
   learningContext?: string;
   createdAt?: string;
   bio?: string;

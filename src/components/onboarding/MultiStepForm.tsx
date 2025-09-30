@@ -6,34 +6,35 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Rocket, Sparkles } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '../ui/label';
 import type { UserProfile } from '@/lib/firestore';
 
 export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingComplete: (profile: UserProfile) => void }) {
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [learningContext, setLearningContext] = useState('');
+  const [name, setName] = useState('');
+  const [education, setEducation] = useState('');
+  const [interest, setInterest] = useState('');
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!learningContext) return;
+    if (!name || !education || !interest) return;
 
     setIsLoading(true);
     const userName = localStorage.getItem('userName');
     if (!userName) {
-      // This case should ideally not happen if user is on this screen
       window.location.href = '/';
       return;
     }
 
     const profile: UserProfile = {
       userId: userName,
-      learningContext: learningContext,
+      name: name,
+      learningContext: `Education: ${education}, Interests: ${interest}`,
       createdAt: new Date().toISOString(),
     }
     
-    // The dashboard will handle saving and test generation
     onOnboardingComplete(profile);
   };
 
@@ -84,17 +85,37 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
                   </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                      <Label htmlFor="learning-context">Describe your learning goals, education stream, and interests.</Label>
-                      <Textarea
-                          id="learning-context"
-                          placeholder="e.g., I'm a 10th-grade student in the science stream, preparing for board exams. I love space and astrophysics, so physics problems related to that are more interesting to me. I struggle with remembering historical dates."
-                          className="min-h-[120px] text-base"
-                          value={learningContext}
-                          onChange={(e) => setLearningContext(e.target.value)}
+                   <div className="space-y-2">
+                      <Label htmlFor="name">Name</Label>
+                      <Input
+                          id="name"
+                          placeholder="e.g., Sanga"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
                       />
                   </div>
-                  <Button type="submit" className="w-full" size="lg" disabled={!learningContext}>
+                   <div className="space-y-2">
+                      <Label htmlFor="education">Education</Label>
+                      <Input
+                          id="education"
+                          placeholder="e.g., 10th Grade, Science Stream"
+                          value={education}
+                          onChange={(e) => setEducation(e.target.value)}
+                          required
+                      />
+                  </div>
+                   <div className="space-y-2">
+                      <Label htmlFor="interest">Area of Interest</Label>
+                      <Input
+                          id="interest"
+                          placeholder="e.g., Space, Astrophysics, History"
+                          value={interest}
+                          onChange={(e) => setInterest(e.target.value)}
+                          required
+                      />
+                  </div>
+                  <Button type="submit" className="w-full" size="lg" disabled={!name || !education || !interest}>
                       {isLoading ? 'Setting things up...' : 'Create My Learning Plan'}
                   </Button>
               </CardContent>
