@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { getTopicData, getUserProfile } from '@/lib/server/firestore';
+import { getTopicData, getUserProfile } from '@/lib/firestore';
 import type { TopicData, UserProfile } from '@/lib/firestore';
 
 const GenerateQuestionsFromTopicDataInputSchema = z.object({
@@ -29,6 +29,7 @@ const QuestionSchema = z.object({
   difficulty: z.enum(['easy', 'medium', 'hard']).describe('Difficulty level'),
   category: z.enum(['Listening', 'Grasping', 'Retention', 'Application']).describe('The category of the question, which must be one of "Listening", "Grasping", "Retention", or "Application".'),
 });
+export type Question = z.infer<typeof QuestionSchema>;
 
 const GenerateQuestionsFromTopicDataOutputSchema = z.object({
   questions: z.array(QuestionSchema).length(10).describe('The generated test questions.'),
@@ -228,4 +229,3 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
     }
   }
 );
- 

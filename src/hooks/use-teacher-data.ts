@@ -4,15 +4,16 @@
 import { useState, useEffect } from 'react';
 import { generateTeacherInsight } from '@/ai/flows/generate-teacher-insight';
 import { useTestResult } from '@/context/TestResultContext';
-import type { Question, GeneratePersonalizedTestOutput } from '@/ai/flows/generate-personalized-test';
+import type { Question } from '@/ai/flows/generate-questions-from-topic-data';
 
 type HeatmapDataItem = {
     student: string;
     data: { topic: string; time: number }[];
 };
 
-type TestResultWithUserId = GeneratePersonalizedTestOutput & {
+type TestResultWithUserId = {
     userId: string;
+    questions: Question[];
     timings: number[];
     answers: (number | null)[];
 };
@@ -49,7 +50,7 @@ export function useTeacherData() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const allResults = latestResult ? [...MOCK_OTHER_RESULTS, latestResult] : [...MOCK_OTHER_RESULTS];
+            const allResults = latestResult ? [...MOCK_OTHER_RESULTS, latestResult as TestResultWithUserId] : [...MOCK_OTHER_RESULTS];
             
             const studentData: HeatmapDataItem[] = allResults.map(result => {
                 const categoryData: { [key: string]: number[] } = {};

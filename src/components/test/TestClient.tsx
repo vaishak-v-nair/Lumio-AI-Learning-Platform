@@ -1,7 +1,7 @@
 
 'use client';
 import { useEffect, useState } from 'react';
-import type { GeneratePersonalizedTestOutput, Question } from '@/ai/flows/generate-personalized-test';
+import type { GenerateQuestionsFromTopicDataOutput, Question } from '@/ai/flows/generate-questions-from-topic-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -19,7 +19,7 @@ import type { TestResult } from '@/lib/firestore';
 
 const SLOW_ANSWER_THRESHOLD = 30; // seconds
 
-export default function TestClient({ testData, onFinish }: { testData: (GeneratePersonalizedTestOutput & {topic: string, testId: string}), onFinish: (result: TestResult) => void }) {
+export default function TestClient({ testData, onFinish }: { testData: (GenerateQuestionsFromTopicDataOutput & {topic: string, testId: string}), onFinish: (result: TestResult) => void }) {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
     const [userAnswers, setUserAnswers] = useState<(number | null)[]>([]);
