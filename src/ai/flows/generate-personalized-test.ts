@@ -51,15 +51,15 @@ export type Question = z.infer<typeof QuestionSchema>;
 const fallbackQuestions: GeneratePersonalizedTestOutput = {
   questions: [
     {
-      questionText: "A train travels at 60 km/h for 2 hours and then at 80 km/h for the next 1.5 hours. What is the total distance covered by the train, excluding the first 30 minutes of the second leg of the journey?",
+      questionText: "A shopkeeper gives a 10% discount on an item marked at $200. He then adds a 10% sales tax on the discounted price. What is the final price? This question tests if you read carefully.",
       options: [
-        "240 km",
-        "200 km",
-        "180 km",
-        "220 km"
+        "$200",
+        "$198",
+        "$180",
+        "$220"
       ],
-      correctAnswerIndex: 2,
-      explanation: "This question tests careful reading. The second leg is 1.5 hours (90 mins), and we exclude the first 30 mins, so we only count 1 hour of travel at 80 km/h. First leg: 60 km/h * 2h = 120 km. Second leg: 80 km/h * 1h = 80 km. Total distance is 120 + 80 = 200 km. Oh, wait! The question asked to exclude the first 30 mins. The second leg is 1.5 hours = 90 minutes. 90-30 = 60 minutes = 1 hour. Distance in second leg = 80 * 1 = 80km. First leg distance = 60 * 2 = 120km. Total distance = 120 + 80 = 200km. Let's re-read. Oh, I see the trick. Total distance is (60 * 2) + (80 * (1.5 - 0.5)) = 120 + (80*1) = 200km. Let me re-calculate. First part: 60 km/h * 2h = 120km. Second part is 1.5h at 80km/h. Distance is 80*1.5 = 120km. Total is 240km. But we exclude the first 30 mins (0.5h) of the second leg. So, distance for the second leg is 80km/h * (1.5h - 0.5h) = 80km/h * 1h = 80km. Total distance = 120km + 80km = 200km. Ah, I see, I was right the first time. The correct answer is 120km + (80km/h * 1h) = 200km. Wait, let me check the options. 180km is an option. What if the question meant total time? No, that's not it. Okay, let's be very careful. First leg: 120 km. Second leg total time: 1.5 hours. First 30 minutes excluded. Remaining time: 1 hour. Distance in remaining time: 80 km/h * 1h = 80 km. Total distance: 120 km + 80 km = 200 km. It seems 200km is the right answer. Let me re-read one more time. 'excluding the first 30 minutes of the second leg of the journey'. Ok, I am confident. 200km. But 180km is an option... how can that be? Maybe the train stops? No info. Maybe the speed changes? No info. What if 'second leg' is the trick? No, it's clear. Let's assume my calculation is correct. 200km. Why would 180km be an option? Maybe I should calculate the distance for 1.5 hours and subtract 30 mins of distance? (80 * 1.5) - (80 * 0.5) = 120 - 40 = 80km. Same result. 120 + 80 = 200km. Okay, I'll stick with 200km. But wait, what if the question is designed to be tricky and I am missing something simple? Let's check the provided correct answer. It's 180km. How? Let's work backwards. If total is 180, and leg 1 is 120, then leg 2 is 60km. How can leg 2 be 60km? It's 80km/h. So time must be 60/80 = 0.75h = 45 mins. How is the time 45 mins? The second leg is 1.5h (90 mins). Exclude first 30 mins. 90-30=60 mins. Wait... maybe the wording 'excluding the first 30 minutes' means the journey of the second leg *starts* after 30 mins, and lasts for 1.5 hours? No, that's not it. 'for the next 1.5 hours'. Ok, I see the only possible way to get 180km. The total journey time is 2h + 1.5h = 3.5h. If we exclude 30 mins, it becomes 3h. But that doesn't make sense. The only way is if 'second leg' refers to something else. I give up. Let's assume the provided answer is correct and there's a trick. The explanation should be: 'The first leg covers 120km. The second leg lasts 1.5 hours, but we only count the distance covered in the first hour, which is 80km, and then something something... this is a bad question. Let's create a better one. A bike travels for 2 hours at 30km/h. It then stops for 30 minutes. After the stop, it travels for another 1 hour at 40 km/h. What is the total distance traveled? Ignore the stop time. First part: 2 * 30 = 60km. Second part: 1 * 40 = 40km. Total: 100km. But this is too simple. The original question was a 'Listening' question. It must have a trick in the wording. Re-reading: 'excluding the first 30 minutes of the second leg'. It must mean that out of the 1.5 hours, you only count the last hour. So 80km. 120+80=200km. I am back to 200km. There must be an error in the original question's provided 'correct' answer of 180km. Let's make a new listening question. A shopkeeper gives a 10% discount on an item marked at $200. He then adds a 10% sales tax on the discounted price. What is the final price? Discounted price: 200 - (10% of 200) = 200 - 20 = $180. Tax: 10% of 180 = $18. Final price: 180 + 18 = $198. This is a good question. Let's use this one as the fallback.",
+      correctAnswerIndex: 1,
+      explanation: "First, calculate the discount: 10% of $200 is $20. The discounted price is $200 - $20 = $180. Next, calculate the sales tax on the discounted price: 10% of $180 is $18. The final price is $180 + $18 = $198.",
       difficulty: 'hard',
       category: 'Listening',
     },
@@ -95,10 +95,10 @@ const fallbackQuestions: GeneratePersonalizedTestOutput = {
         "60 sq meters",
         "38 sq meters",
         "40 sq meters",
-        "104 sq meters"
+        "98 sq meters"
       ],
       correctAnswerIndex: 1,
-      explanation: "Area of garden = 12*5 = 60. New length = 12+1+1 = 14. New width = 5+1+1 = 7. Total area = 14*7 = 98. Area of walkway = 98 - 60 = 38 sq meters.",
+      explanation: "The area of the garden itself is 12m * 5m = 60 sq meters. With the 1m walkway, the new dimensions are (12+1+1)m by (5+1+1)m, which is 14m by 7m. The total area is 14 * 7 = 98 sq meters. The area of the walkway is the total area minus the garden area: 98 - 60 = 38 sq meters.",
       difficulty: 'hard',
       category: 'Application',
     },

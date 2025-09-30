@@ -86,7 +86,7 @@ export default function TestResults({ result, onBackToDashboard }: { result: Tes
                         )}
                         <Link href="/achievements" className="!mt-4 block">
                            <Button variant="outline" className="w-full">
-                                View All Achievements <ArrowRight className="ml-2" />
+                                View All Achievements <ArrowRight className="ml-2 h-4 w-4" />
                            </Button>
                         </Link>
                     </CardContent>
