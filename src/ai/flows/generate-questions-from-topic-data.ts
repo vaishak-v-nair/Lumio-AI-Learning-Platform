@@ -115,7 +115,7 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
 
     if (!topicData) {
         // Fallback to the generic generator if no specific data is found for the topic
-        console.log(`No topic data found for '${input.topic}' in Firestore. Falling back to generic test generation.`);
+        console.log(`No topic data found for '${input.topic}'. Falling back to generic test generation.`);
         return generatePersonalizedTest({
             weakAreas: 'Grasping, Retention, Application, Listening',
             numberOfQuestions: input.numberOfQuestions,

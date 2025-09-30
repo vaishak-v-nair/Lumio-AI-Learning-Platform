@@ -39,7 +39,7 @@ export default function DashboardPage() {
             
             const profile = await getUserProfile(storedUserName);
             setUserProfile(profile);
-            if (profile) {
+            if (profile?.learningContext) {
                 setView('dashboard');
             } else {
                 setView('onboarding');
@@ -51,7 +51,6 @@ export default function DashboardPage() {
     const handleOnboardingComplete = async (profile: UserProfile) => {
         try {
             await createUserProfile(profile);
-            localStorage.setItem('onboardingComplete', 'true');
             setUserProfile(profile);
             
             toast({
@@ -60,7 +59,7 @@ export default function DashboardPage() {
             });
             
             if (profile.userId) {
-                handleStartTest(profile.userId);
+                handleStartTest(profile.userId, "Percentages");
             }
 
         } catch (error) {
@@ -74,18 +73,18 @@ export default function DashboardPage() {
         }
     };
     
-    const handleStartTest = async (userId: string) => {
+    const handleStartTest = async (userId: string, topic: string) => {
         setView('loading');
         try {
             const testData = await generateQuestionsFromTopicData({
-                topic: "Personalized Test",
+                topic: topic,
                 numberOfQuestions: 5,
                 userId: userId
             });
             
             const testId = crypto.randomUUID();
             
-            setCurrentTest({ ...testData, topic: "Personalized Test", testId});
+            setCurrentTest({ ...testData, topic: topic, testId});
             setView('testing');
 
         } catch (error) {
@@ -141,8 +140,8 @@ export default function DashboardPage() {
                     <CardDescription>Begin a test tailored to your needs.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col items-center justify-center space-y-4">
-                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName)}>
-                        Start Personalized Test
+                    <Button className="w-full max-w-xs rounded-full" onClick={() => handleStartTest(userName, 'Percentages')}>
+                        Start Percentages Test
                     </Button>
                 </CardContent>
             </Card>
