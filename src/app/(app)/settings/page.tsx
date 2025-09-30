@@ -36,12 +36,14 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label htmlFor="dark-mode" className="flex flex-col space-y-1">
-                            <span>Dark Mode</span>
-                            <span className="font-normal leading-snug text-muted-foreground">
+                        <div className="flex flex-col space-y-1">
+                            <Label htmlFor="dark-mode" >
+                                <span>Dark Mode</span>
+                            </Label>
+                            <span className="text-xs font-normal leading-snug text-muted-foreground">
                                 Enable dark mode for a different visual experience.
                             </span>
-                        </Label>
+                        </div>
                         <Switch id="dark-mode" onClick={() => document.documentElement.classList.toggle('dark')} />
                     </div>
                 </CardContent>
@@ -54,21 +56,25 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label htmlFor="email-notifications" className="flex flex-col space-y-1">
-                            <span>Email Notifications</span>
-                            <span className="font-normal leading-snug text-muted-foreground">
+                         <div className="flex flex-col space-y-1">
+                            <Label htmlFor="email-notifications">
+                                <span>Email Notifications</span>
+                            </Label>
+                            <span className="text-xs font-normal leading-snug text-muted-foreground">
                                 Receive summaries and updates via email.
                             </span>
-                        </Label>
+                        </div>
                         <Switch id="email-notifications" defaultChecked />
                     </div>
                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label htmlFor="push-notifications" className="flex flex-col space-y-1">
-                            <span>Push Notifications</span>
-                            <span className="font-normal leading-snug text-muted-foreground">
+                        <div className="flex flex-col space-y-1">
+                            <Label htmlFor="push-notifications">
+                                <span>Push Notifications</span>
+                            </Label>
+                            <span className="text-xs font-normal leading-snug text-muted-foreground">
                                 Get real-time alerts in your browser.
                             </span>
-                        </Label>
+                        </div>
                         <Switch id="push-notifications" />
                     </div>
                 </CardContent>
