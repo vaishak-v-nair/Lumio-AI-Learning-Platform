@@ -190,28 +190,8 @@ const generateQuestionsFromTopicDataFlow = ai.defineFlow(
             console.log("Successfully generated questions from topic data.");
             return output;
         }
-
-        console.warn("LLM did not produce a structured output. Attempting to parse from text.");
-        const text = llmResponse.text;
-        const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-        const match = text.match(jsonRegex);
-
-        if (match && match[1]) {
-            try {
-            const extractedJson = JSON.parse(match[1]);
-            const validation = GenerateQuestionsFromTopicDataOutputSchema.safeParse(extractedJson);
-            if (validation.success) {
-                console.log("Successfully parsed JSON from text fallback.");
-                return validation.data;
-            } else {
-                console.error("Parsed JSON from text does not match schema:", validation.error);
-            }
-            } catch (jsonError) {
-            console.error("Failed to parse extracted JSON from text:", jsonError);
-            }
-        }
         
-        console.error("Critical: AI failed to generate or format a test correctly. All fallbacks failed. Serving hardcoded questions.");
+        console.error("Critical: AI failed to generate or format a test correctly. Serving hardcoded questions.");
         return fallbackQuestions;
 
     } catch (error) {
