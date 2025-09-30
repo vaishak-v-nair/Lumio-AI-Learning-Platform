@@ -103,9 +103,6 @@ export default function AuthForm() {
                 description: 'A sign-in link has been sent to your email address.',
             });
 
-            // We will create the profile after the onboarding step.
-            // await createUserProfile({ userId: username });
-
             localStorage.setItem('userName', username);
             localStorage.setItem('userUID', user.uid);
             
@@ -200,7 +197,7 @@ export default function AuthForm() {
                 <form onSubmit={handleAuthAction} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="username-signup">Username</Label>
-                    <Input id="username-signup" type="text" placeholder="your_username" required value={username} onChange={(e) => setUsername(e.targe
+                    <Input id="username-signup" type="text" placeholder="your_username" required value={username} onChange={(e) => setUsername(e.target.value)} />
                     {usernameError && <p className="text-xs text-destructive">{usernameError}</p>}
                 </div>
                 <div className="space-y-2">
