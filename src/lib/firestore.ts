@@ -45,6 +45,7 @@ export interface PerformanceHistory {
 
 export interface UserProfile {
   userId: string; // This is the unique username
+  uid: string; // This is the firebase auth user UID
   name?: string; // This is the display name
   learningContext?: string;
   createdAt?: string;
@@ -167,6 +168,23 @@ export const createUserProfile = async (profile: Partial<UserProfile> & { userId
     console.error('Error creating/updating user profile: ', e);
     return false;
   }
+};
+
+export const getUserProfileByUID = async (uid: string): Promise<UserProfile | null> => {
+    try {
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('uid', '==', uid), limit(1));
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+            const userDoc = querySnapshot.docs[0];
+            return userDoc.data() as UserProfile;
+        }
+        return null;
+    } catch (e) {
+        console.error('Error getting user profile by UID: ', e);
+        return null;
+    }
 };
 
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {

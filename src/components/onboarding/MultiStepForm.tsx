@@ -23,13 +23,15 @@ export default function MultiStepForm({ onOnboardingComplete }: { onOnboardingCo
 
     setIsLoading(true);
     const userName = localStorage.getItem('userName');
-    if (!userName) {
+    const userUID = localStorage.getItem('userUID');
+    if (!userName || !userUID) {
       window.location.href = '/';
       return;
     }
 
     const profile: UserProfile = {
       userId: userName,
+      uid: userUID,
       name: name,
       learningContext: `Education: ${education}, Interests: ${interest}`,
       createdAt: new Date().toISOString(),

@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { getUserProfile } from '@/lib/firestore';
+import { getUserProfileByUID } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -95,21 +95,23 @@ export default function AuthForm() {
        try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            const userName = user.displayName;
+            const profile = await getUserProfileByUID(user.uid);
 
-            if (userName) {
-                 localStorage.setItem('userName', userName);
-                 localStorage.setItem('userUID', user.uid);
-                 const profile = await getUserProfile(userName);
-                 if (profile) {
-                    localStorage.setItem('onboardingComplete', 'true');
-                 }
-                 router.push('/dashboard');
-            } else {
-                const fallbackName = user.email?.split('@')[0] || 'guest';
-                localStorage.setItem('userName', fallbackName);
+            if (profile) {
+                localStorage.setItem('userName', profile.userId);
                 localStorage.setItem('userUID', user.uid);
+                if (profile.learningContext) {
+                    localStorage.setItem('onboardingComplete', 'true');
+                }
                 router.push('/dashboard');
+            } else {
+                // This case should ideally not happen if signup is enforced
+                // but as a fallback, we can use the display name or a generated name
+                const fallbackName = user.displayName || user.email?.split('@')[0] || 'guest';
+                localStorage.setItem('userName', fallbackName);
+                 localStorage.setItem('userUID', user.uid);
+                // Redirect to onboarding if profile is not found
+                router.push('/dashboard'); 
             }
 
        } catch (error: any) {
