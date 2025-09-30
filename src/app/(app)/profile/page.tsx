@@ -13,7 +13,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useTestResult } from "@/context/TestResultContext";
 import ImageCropper, { Area } from '@/components/ImageCropper';
 import { getCroppedImg } from '@/lib/canvas-utils';
 import { useToast } from "@/hooks/use-toast";
@@ -37,6 +36,7 @@ export default function ProfilePage() {
     const [isClient, setIsClient] = useState(false);
     const [memberSince, setMemberSince] = useState('');
     const [stats, setStats] = useState<Stat[]>([]);
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
 
     const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
     const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false);
@@ -50,7 +50,6 @@ export default function ProfilePage() {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isTakingPhoto, setIsTakingPhoto] = useState(false);
 
-    const { latestResult: results, isLoading } = useTestResult();
     const { toast } = useToast();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -72,6 +71,7 @@ export default function ProfilePage() {
     useEffect(() => {
         setIsClient(true);
         const loadProfile = async () => {
+            setIsLoadingStats(true);
             const storedUsername = localStorage.getItem('userName');
             if (storedUsername) {
                 setUsername(storedUsername);
@@ -80,11 +80,44 @@ export default function ProfilePage() {
                     setDisplayName(profile.name || storedUsername);
                     setBio(profile.bio || "This is a placeholder bio. You can edit it by clicking the button below!");
                     setAvatar(profile.avatarUrl || `https://picsum.photos/seed/${storedUsername}/128/128`);
-                    setMemberSince(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+                    setMemberSince(profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A');
+
+                    // Calculate stats from full history
+                    const testsCompleted = profile.performanceHistory?.length || 0;
+                    const totalScore = profile.performanceHistory?.reduce((acc, test) => acc + test.score, 0) || 0;
+                    const averageScore = testsCompleted > 0 ? Math.round(totalScore / testsCompleted) : 0;
+                    
+                    const earnedAchievements = new Set<string>();
+                    if (testsCompleted > 0) earnedAchievements.add('first_test');
+                    // In a real app, you'd have more complex logic for achievements.
+                    // For now, let's grant one for high average score.
+                    if (averageScore >= 85) earnedAchievements.add('topic_master');
+                    if (testsCompleted >= 5) earnedAchievements.add('streak_5');
+
+                    // NOTE: Avg time per question is complex to calculate historically without more data.
+                    // We'll keep it based on the last test for now, or show N/A.
+                    const lastTestTime = profile.performanceHistory && profile.performanceHistory.length > 0
+                        ? 'N/A' // This data isn't in performanceHistory, would need to fetch full test result.
+                        : 'N/A';
+
+                    setStats([
+                        { label: "Tests Completed", value: testsCompleted.toString(), icon: <BookOpen className="h-6 w-6 text-primary" /> },
+                        { label: "Average Score", value: `${averageScore}%`, icon: <Target className="h-6 w-6 text-green-500" /> },
+                        { label: "Total Achievements", value: earnedAchievements.size.toString(), icon: <Award className="h-6 w-6 text-amber-500" /> },
+                        { label: "Avg. Time / Question", value: lastTestTime, icon: <Clock className="h-6 w-6 text-blue-500" /> },
+                    ]);
+
                 } else {
                      setAvatar(`https://picsum.photos/seed/${storedUsername}/128/128`);
+                     setStats([
+                        { label: "Tests Completed", value: "0", icon: <BookOpen className="h-6 w-6 text-primary" /> },
+                        { label: "Average Score", value: "N/A", icon: <Target className="h-6 w-6 text-green-500" /> },
+                        { label: "Total Achievements", value: "0", icon: <Award className="h-6 w-6 text-amber-500" /> },
+                        { label: "Avg. Time / Question", value: "N/A", icon: <Clock className="h-6 w-6 text-blue-500" /> },
+                    ]);
                 }
             }
+             setIsLoadingStats(false);
         };
 
         loadProfile();
@@ -126,34 +159,6 @@ export default function ProfilePage() {
         }
     }, [isAvatarDialogOpen, isTakingPhoto, toast]);
 
-    useEffect(() => {
-        if (results) {
-            const averageScore = Math.round(results.score);
-            const avgTime = Math.round(results.timings.reduce((a, b) => a + b, 0) / results.timings.length);
-            
-            const earnedAchievements = [];
-            if (results.score >= 90) earnedAchievements.push('mastered_topic');
-            const allFast = results.timings.every((t: number) => t < 30);
-            if (allFast) earnedAchievements.push('quick_thinker');
-            earnedAchievements.push('streak_5'); // Mocked
-            earnedAchievements.push('first_test');
-
-            setStats([
-                { label: "Tests Completed", value: "1", icon: <BookOpen className="h-6 w-6 text-primary" /> },
-                { label: "Average Score", value: `${averageScore}%`, icon: <Target className="h-6 w-6 text-green-500" /> },
-                { label: "Total Achievements", value: `${earnedAchievements.length}`, icon: <Award className="h-6 w-6 text-amber-500" /> },
-                { label: "Avg. Time / Question", value: `${avgTime}s`, icon: <Clock className="h-6 w-6 text-blue-500" /> },
-            ]);
-        } else {
-             setStats([
-                { label: "Tests Completed", value: "0", icon: <BookOpen className="h-6 w-6 text-primary" /> },
-                { label: "Average Score", value: "N/A", icon: <Target className="h-6 w-6 text-green-500" /> },
-                { label: "Total Achievements", value: "0", icon: <Award className="h-6 w-6 text-amber-500" /> },
-                { label: "Avg. Time / Question", value: "N/A", icon: <Clock className="h-6 w-6 text-blue-500" /> },
-            ]);
-        }
-    }, [results]);
-
     const user = {
         name: displayName,
         memberSince: memberSince
@@ -173,6 +178,7 @@ export default function ProfilePage() {
         };
         
         await createUserProfile({ userId: username, ...profileUpdate });
+        window.dispatchEvent(new Event('storage')); // Notify layout of name change
 
         toast({
             title: "Profile Updated",
@@ -187,21 +193,13 @@ export default function ProfilePage() {
         setIsCropping(true);
         try {
             const croppedImage = await getCroppedImg(imageSrc, croppedAreaPixels);
-            
-            // In a real app, you would upload this blob to Firebase Storage and get a URL.
-            // For this demo, we'll continue using a data URL stored in Firestore & localStorage.
-            // const blob = await fetch(croppedImage).then(r => r.blob());
-            // const storageRef = ref(storage, `avatars/${username}`);
-            // await uploadBytes(storageRef, blob);
-            // const downloadURL = await getDownloadURL(storageRef);
-
-            const downloadURL = croppedImage; // Using data URL directly for demo
+            const downloadURL = croppedImage; 
 
             setAvatar(downloadURL);
             localStorage.setItem('userAvatar', downloadURL);
             await createUserProfile({ userId: username, avatarUrl: downloadURL });
 
-            window.dispatchEvent(new Event('storage')); // Notify layout of avatar change
+            window.dispatchEvent(new Event('storage'));
             setIsAvatarDialogOpen(false);
             resetAvatarDialog();
         } catch (e) {
@@ -400,7 +398,7 @@ export default function ProfilePage() {
                     <CardDescription>An overview of your learning journey so far.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {isLoading ? (
+                    {isLoadingStats ? (
                         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                             {[...Array(4)].map((_, index) => (
                                 <Card key={index}>
@@ -441,3 +439,5 @@ export default function ProfilePage() {
         </div>
     );
 }
+
+    
