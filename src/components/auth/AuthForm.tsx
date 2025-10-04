@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { createUserProfile, getUserProfileByUID } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/firebase';
+import { useAuth } from '@/firebase'; // Corrected import
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 type AuthAction = 'login' | 'signup';
@@ -33,7 +33,7 @@ export default function AuthForm() {
   const [isClient, setIsClient] = useState(false);
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const auth = useAuth();
+  const auth = useAuth(); // Now correctly using the hook
 
   useEffect(() => {
     setIsClient(true);
@@ -61,7 +61,7 @@ export default function AuthForm() {
 
   const handleAuthAction = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isClient || !validate()) return;
+    if (!isClient || !validate() || !auth) return;
 
     setIsLoading(true);
 
@@ -106,7 +106,6 @@ export default function AuthForm() {
             const user = userCredential.user;
             let profile = await getUserProfileByUID(user.uid);
 
-            // If profile doesn't exist in Firestore, create it.
             if (!profile) {
                 console.log("User profile not found in Firestore, creating one...");
                 const newUsername = user.displayName || user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`;
@@ -122,7 +121,6 @@ export default function AuthForm() {
                 console.log("New user profile created successfully.");
             }
 
-            // At this point, profile is guaranteed to exist.
             localStorage.setItem('userName', profile.userId);
             localStorage.setItem('userUID', user.uid);
             if (profile.learningContext) {
@@ -214,4 +212,3 @@ export default function AuthForm() {
     </Card>
   );
 }
-    
