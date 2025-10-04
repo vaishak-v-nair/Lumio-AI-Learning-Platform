@@ -1,0 +1,104 @@
+/**
+ * @file Firestore Security Rules
+ * @description This ruleset enforces a strict user-ownership model for user profiles and test results,
+ * with public read access to questions.
+ *
+ * Data Structure:
+ * - /user_profiles/{uid}: Stores user profile information, accessible only to the user with the matching UID.
+ * - /user_profiles/{uid}/test_results/{testResultId}: Stores test results for a specific user, accessible only to that user.
+ * - /questions/{questionId}: Stores test questions, publicly readable. Write access is not granted in this prototype.
+ *
+ * Key Security Decisions:
+ * - User profiles are strictly owned by the user with the matching UID.
+ * - Test results are strictly owned by the user with the matching UID in the parent profile.
+ * - Questions are publicly readable.
+ * - No user listing is allowed.
+ * - In this prototype phase, data shape validation is relaxed to allow rapid iteration.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the request is made by the authenticated user with the given UID.
+     * @param {string} userId - The user ID to compare against the request's authentication UID.
+     * @return {bool} - True if the user is signed in and the UID matches, false otherwise.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Checks if the user is signed in.
+     * @return {bool} - True if the user is signed in, false otherwise.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * @description Checks if the user is an existing owner, ensuring both ownership and document existence.
+     * @param {string} userId - The user ID to compare against the request's authentication UID.
+     * @return {bool} - True if the user is signed in, the UID matches, and the document exists.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Enforces ownership for user profiles.
+     * @path /user_profiles/{uid}
+     * @allow (create) - Authenticated user with UID 'user123' can create a profile at /user_profiles/user123.
+     * @allow (get) - Authenticated user with UID 'user123' can read their profile at /user_profiles/user123.
+     * @allow (update) - Authenticated user with UID 'user123' can update their profile at /user_profiles/user123.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete their profile at /user_profiles/user123.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create a profile at /user_profiles/user123.
+     * @deny (get) - Authenticated user with UID 'user456' cannot read profile at /user_profiles/user123.
+     * @principle Enforces document ownership for writes.
+     */
+    match /user_profiles/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create: if isOwner(uid) && request.resource.data.uid == uid;
+      allow update: if isExistingOwner(uid) && request.resource.data.uid == resource.data.uid;
+      allow delete: if isExistingOwner(uid);
+    }
+
+    /**
+     * @description Enforces ownership for test results within user profiles.
+     * @path /user_profiles/{uid}/test_results/{testResultId}
+     * @allow (create) - Authenticated user with UID 'user123' can create a test result at /user_profiles/user123/test_results/testResult1.
+     * @allow (get) - Authenticated user with UID 'user123' can read their test result at /user_profiles/user123/test_results/testResult1.
+     * @allow (update) - Authenticated user with UID 'user123' can update their test result at /user_profiles/user123/test_results/testResult1.
+     * @allow (delete) - Authenticated user with UID 'user123' can delete their test result at /user_profiles/user123/test_results/testResult1.
+     * @deny (create) - Authenticated user with UID 'user456' cannot create a test result at /user_profiles/user123/test_results/testResult1.
+     * @deny (get) - Authenticated user with UID 'user456' cannot read test result at /user_profiles/user123/test_results/testResult1.
+     * @principle Restricts access to a user's own data tree.
+     */
+    match /user_profiles/{uid}/test_results/{testResultId} {
+      allow get: if isOwner(uid);
+      allow list: if isOwner(uid);
+      allow create: if isOwner(uid) && request.resource.data.userId == uid;
+      allow update: if isExistingOwner(uid) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(uid);
+    }
+
+    /**
+     * @description Allows public read access to questions.
+     * @path /questions/{questionId}
+     * @allow (get) - Any user (or no user) can read any question.
+     * @allow (list) - Any user (or no user) can list questions.
+     * @deny (create) - No one can create a question.
+     * @deny (update) - No one can update a question.
+     * @deny (delete) - No one can delete a question.
+     * @principle Allows public read access while restricting write access.
+     */
+    match /questions/{questionId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; // TODO: Add admin validation once roles are defined.
+      allow update: if false; // TODO: Add admin validation once roles are defined.
+      allow delete: if false; // TODO: Add admin validation once roles are defined.
+    }
+  }
+}

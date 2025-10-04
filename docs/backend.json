@@ -1,0 +1,212 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile, storing non-authentication related user information.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user profile."
+        },
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID from the authentication system (e.g., Firebase UID).  Links the profile to the authentication record."
+        },
+        "userId": {
+          "type": "string",
+          "description": "The user's chosen username."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user profile was created.",
+          "format": "date-time"
+        },
+        "learningContext": {
+          "type": "string",
+          "description": "Stringified JSON for user's onboarding context. Holds keys for weak areas in learning fundamentals."
+        },
+        "progressScores": {
+          "type": "string",
+          "description": "Stringified JSON for user's progress scores across Listening, Grasping, Retention and Application."
+        }
+      },
+      "required": [
+        "id",
+        "uid",
+        "userId",
+        "name",
+        "email",
+        "createdAt"
+      ]
+    },
+    "Question": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Question",
+      "type": "object",
+      "description": "Represents a question in the test bank.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the question."
+        },
+        "text": {
+          "type": "string",
+          "description": "The text of the question."
+        },
+        "correctAnswer": {
+          "type": "string",
+          "description": "The correct answer to the question."
+        },
+        "incorrectAnswers": {
+          "type": "array",
+          "description": "A list of possible incorrect answers for the question.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "difficulty": {
+          "type": "number",
+          "description": "The difficulty level of the question (e.g., 1-10)."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the question belongs to (e.g., math, science)."
+        },
+        "scoringLogic": {
+          "type": "string",
+          "description": "Stringified JSON for scoring logic, dynamically configured with AI."
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "correctAnswer",
+        "incorrectAnswers",
+        "difficulty",
+        "category",
+        "scoringLogic"
+      ]
+    },
+    "TestResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "TestResult",
+      "type": "object",
+      "description": "Represents the result of a test taken by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the test result."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N TestResult)"
+        },
+        "questionIds": {
+          "type": "array",
+          "description": "References to Questions. (Relationship: Question N:N TestResult)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "answers": {
+          "type": "array",
+          "description": "The user's answers to the questions in the test.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "score": {
+          "type": "number",
+          "description": "The score the user received on the test."
+        },
+        "dateTaken": {
+          "type": "string",
+          "description": "The date and time the test was taken.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "questionIds",
+        "answers",
+        "score",
+        "dateTaken"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/user_profiles/{uid}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information, indexed by Firebase UID.  Enables direct access to user data for profile management and personalization.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The Firebase UID of the user. This serves as the primary key for the user profile."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/user_profiles/{uid}/test_results/{testResultId}",
+        "definition": {
+          "entityName": "TestResult",
+          "schema": {
+            "$ref": "#/backend/entities/TestResult"
+          },
+          "description": "Stores test results for a specific user. Located as a subcollection of the user profile to ensure data locality and simplify security rules.",
+          "params": [
+            {
+              "name": "uid",
+              "description": "The Firebase UID of the user who took the test. Used to scope the test results to the user."
+            },
+            {
+              "name": "testResultId",
+              "description": "The unique ID of the test result document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/questions/{questionId}",
+        "definition": {
+          "entityName": "Question",
+          "schema": {
+            "$ref": "#/backend/entities/Question"
+          },
+          "description": "Stores test questions. All users and AI have read access. Admin users have create, update and delete access.",
+          "params": [
+            {
+              "name": "questionId",
+              "description": "The unique ID of the question."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure authorization independence, clarity, and scalability, adhering to the specified principles. User profiles are stored in a dedicated collection, `/user_profiles`, indexed by their unique Firebase `uid`. This allows for direct access and avoids the need for complex queries or collection group queries to retrieve user data. The `TestResult` subcollection is created to store data about test results for each user, located at `/user_profiles/{uid}/test_results`. The use of subcollections ensures that test results are scoped to the user who took the test, which greatly simplifies security rules and data management.\n\n**Authorization Independence:** The design uses path-based ownership for user profiles and test results.  Access to `/user_profiles/{uid}` is granted based on `request.auth.uid == uid`.  This eliminates the need for `get()` calls in security rules to validate ownership.\n\n**QAPs (Rules are not Filters):** The structure facilitates secure `list` operations. Listing user profiles is inherently restricted (if desired) by requiring authentication and potentially limiting the scope of results.  Listing test results is secured by the path-based ownership, ensuring only the authenticated user can access their own results. The Questions are stored under `/questions`. This segregation allows for the creation of global security rules for questions that can be managed by administrators.\n\nThis structure prioritizes simplicity and security, making it easier to implement and maintain robust security rules without sacrificing performance."
+  }
+}
