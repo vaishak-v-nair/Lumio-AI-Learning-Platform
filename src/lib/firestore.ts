@@ -47,6 +47,7 @@ export interface UserProfile {
   userId: string; // This is the unique username
   uid: string; // This is the firebase auth user UID
   name?: string; // This is the display name
+  email: string;
   learningContext?: string;
   createdAt?: string;
   bio?: string;
@@ -203,13 +204,15 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
 
 export const getTopicData = async (topic: string): Promise<TopicData | null> => {
   try {
-    if (topic.toLowerCase() === 'percentages') {
-        const filePath = path.join(process.cwd(), 'src', 'lib', 'percentages-data.json');
+    // In a real app, you might query Firestore here for other topics.
+    const topicFileName = `${topic.toLowerCase().replace(/\s+/g, '-')}-data.json`;
+    const filePath = path.join(process.cwd(), 'src', 'lib', topicFileName);
+
+    if (fs.existsSync(filePath)) {
         const fileContent = fs.readFileSync(filePath, 'utf-8');
         return JSON.parse(fileContent);
     }
-    // In a real app, you might query Firestore here for other topics.
-    // e.g. const docRef = doc(firestore, 'topicData', topic.toLowerCase());
+
     console.log(`No data file found for topic: ${topic}`);
     return null;
   } catch (e) {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -74,6 +75,7 @@ export default function AuthForm() {
                 userId: username,
                 uid: user.uid,
                 name: username,
+                email: user.email || '',
                 createdAt: new Date().toISOString(),
             });
 
@@ -102,21 +104,31 @@ export default function AuthForm() {
        try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            const profile = await getUserProfileByUID(user.uid);
+            let profile = await getUserProfileByUID(user.uid);
 
-            if (profile) {
-                localStorage.setItem('userName', profile.userId);
-                localStorage.setItem('userUID', user.uid);
-                if (profile.learningContext) {
-                    localStorage.setItem('onboardingComplete', 'true');
-                }
-                router.push('/dashboard');
-            } else {
-                const fallbackName = user.displayName || user.email?.split('@')[0] || 'guest';
-                localStorage.setItem('userName', fallbackName);
-                 localStorage.setItem('userUID', user.uid);
-                router.push('/dashboard'); 
+            // If profile doesn't exist in Firestore, create it.
+            if (!profile) {
+                console.log("User profile not found in Firestore, creating one...");
+                const newUsername = user.displayName || user.email?.split('@')[0] || `user${user.uid.substring(0, 5)}`;
+                const newProfileData = {
+                    userId: newUsername,
+                    uid: user.uid,
+                    name: user.displayName || newUsername,
+                    email: user.email || '',
+                    createdAt: new Date().toISOString(),
+                };
+                await createUserProfile(newProfileData);
+                profile = newProfileData;
+                console.log("New user profile created successfully.");
             }
+
+            // At this point, profile is guaranteed to exist.
+            localStorage.setItem('userName', profile.userId);
+            localStorage.setItem('userUID', user.uid);
+            if (profile.learningContext) {
+                localStorage.setItem('onboardingComplete', 'true');
+            }
+            router.push('/dashboard');
 
        } catch (error: any) {
             toast({
