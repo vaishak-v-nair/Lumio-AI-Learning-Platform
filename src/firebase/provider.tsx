@@ -102,10 +102,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       userError: userAuthState.userError,
     };
   }, [firebaseApp, firestore, auth, userAuthState]);
+  const memoizedErrorListener = useMemo(() => <FirebaseErrorListener />, []);
+
 
   return (
     <FirebaseContext.Provider value={contextValue}>
-      <FirebaseErrorListener />
+      {memoizedErrorListener}
       {children}
     </FirebaseContext.Provider>
   );
