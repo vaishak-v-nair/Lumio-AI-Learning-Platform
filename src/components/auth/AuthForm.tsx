@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { getUserProfileByUID } from '@/lib/firestore';
+import { createUserProfile, getUserProfileByUID } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
 import { auth } from '@/lib/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
@@ -70,6 +70,13 @@ export default function AuthForm() {
             const user = userCredential.user;
             await updateProfile(user, { displayName: username });
 
+            await createUserProfile({
+                userId: username,
+                uid: user.uid,
+                name: username,
+                createdAt: new Date().toISOString(),
+            });
+
             localStorage.setItem('userName', username);
             localStorage.setItem('userUID', user.uid);
             
@@ -105,12 +112,9 @@ export default function AuthForm() {
                 }
                 router.push('/dashboard');
             } else {
-                // This case should ideally not happen if signup is enforced
-                // but as a fallback, we can use the display name or a generated name
                 const fallbackName = user.displayName || user.email?.split('@')[0] || 'guest';
                 localStorage.setItem('userName', fallbackName);
                  localStorage.setItem('userUID', user.uid);
-                // Redirect to onboarding if profile is not found
                 router.push('/dashboard'); 
             }
 
