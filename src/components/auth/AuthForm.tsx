@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { createUserProfile, getUserProfileByUID } from '@/lib/firestore';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/firebase'; // Corrected import
+import { useAuth } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 type AuthAction = 'login' | 'signup';
@@ -33,7 +33,7 @@ export default function AuthForm() {
   const [isClient, setIsClient] = useState(false);
   const [usernameError, setUsernameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const auth = useAuth(); // Now correctly using the hook
+  const auth = useAuth();
 
   useEffect(() => {
     setIsClient(true);

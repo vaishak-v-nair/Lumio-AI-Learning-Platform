@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -30,6 +31,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  optimizeFonts: true, // Enable font optimization
+  fastRefresh: true, // Enable Fast Refresh for a better development experience
+  experimental: {
+    appDir: true, // Enable the app directory
+  }
 };
 
 export default nextConfig;

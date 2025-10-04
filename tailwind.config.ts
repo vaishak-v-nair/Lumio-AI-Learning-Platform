@@ -2,6 +2,12 @@
 import type {Config} from 'tailwindcss';
 
 export default {
+  mode: 'jit', // Enable JIT compiler for faster development
+  purge: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ], // Purge unused CSS for smaller production builds
   darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
