@@ -6,12 +6,12 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useEffect, useState, useCallback } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { TestResultProvider } from "@/context/TestResultContext";
 import { getUserProfile } from "@/lib/firestore";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { auth } from "@/lib/firebase";
+import { useAuth } from "@/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
@@ -29,8 +29,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [displayName, setDisplayName] = useState("Guest");
   const [userAvatar, setUserAvatar] = useState(`https://picsum.photos/seed/Guest/32/32`);
   const [isClient, setIsClient] = useState(false);
-  const pathname = usePathname();
   const router = useRouter();
+  const auth = useAuth();
 
   const fetchAndSetUserData = useCallback(async (user: import('firebase/auth').User | null) => {
     if (user) {
@@ -43,9 +43,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             } else {
                 setDisplayName(storedName);
             }
-            // This check should only redirect if the user is not already on the dashboard
-            // and has no profile, to allow the onboarding flow to happen.
-            if (!profile && pathname !== '/dashboard') {
+            
+            if (!profile) {
                 router.push('/dashboard');
             }
         } else {
@@ -62,7 +61,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     } else {
         router.push('/');
     }
-  }, [router, pathname]);
+  }, [router]);
 
   useEffect(() => {
     setIsClient(true);
@@ -88,7 +87,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         unsubscribe();
         window.removeEventListener('storage', handleStorageChange);
     };
-  }, [fetchAndSetUserData]);
+  }, [fetchAndSetUserData, auth]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -125,9 +124,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             {navItems.map((item) => (
                 <Link key={item.href} href={item.href} 
                     className={cn("relative flex items-center gap-2 font-semibold transition-colors hover:text-primary",
-                    pathname === item.href ? "text-primary" : "text-muted-foreground",
+                    router.pathname === item.href ? "text-primary" : "text-muted-foreground",
                     "after:absolute after:bottom-[-2px] after:left-0 after:h-[2px] after:w-full after:bg-primary after:scale-x-0 after:origin-left after:transition-transform after:duration-300 hover:after:scale-x-100",
-                    pathname === item.href && "after:scale-x-100"
+                    router.pathname === item.href && "after:scale-x-100"
                     )}
                 >
                     {item.icon}
@@ -160,7 +159,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                      <Link
                         key={item.href}
                         href={item.href}
-                        className={cn("flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground", pathname === item.href && "bg-muted text-foreground")}
+                        className={cn("flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground", router.pathname === item.href && "bg-muted text-foreground")}
                     >
                         {item.icon}
                         {item.label}
@@ -202,3 +201,4 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </TestResultProvider>
   );
 }
+    

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -30,11 +31,14 @@ export default function RootLayout({
           inter.variable
         )}
       >
-        <div className="mx-auto w-full max-w-5xl px-4 py-8">
-          {children}
-        </div>
-        <Toaster />
+        <FirebaseClientProvider>
+          <div className="mx-auto w-full max-w-5xl px-4 py-8">
+            {children}
+          </div>
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );
 }
+    
